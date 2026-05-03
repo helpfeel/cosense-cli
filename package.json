@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Cosense (旧Scrapbox) のページを読み・調べるCLI",
   "homepage": "https://github.com/nota/cosense-cli",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/nota/cosense-cli.git"

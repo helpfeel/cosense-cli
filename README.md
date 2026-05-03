@@ -25,7 +25,3 @@ Skillの実行にはCLIが必要
 - install [direnv](https://direnv.net/)
 - run `npm install`
 - run `claude` or `codex`
-
-## License
-
-Proprietary. Copyright Helpfeel Inc.
