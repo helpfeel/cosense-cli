@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "node": true,
+    "es2023": true
+  },
+  "ignorePatterns": ["node_modules/**"],
+  "rules": {
+    "no-undef": "error",
+    "no-process-exit": "off",
+    "no-prototype-builtins": "off",
+    "no-unused-vars": [
+      "error",
+      { "caughtErrors": "none", "args": "none", "ignoreRestSiblings": true }
+    ],
+    "import/extensions": ["error", "always", { "ignorePackages": true }],
+    "no-unused-expressions": "off",
+    "typescript/no-wrapper-object-types": "off",
+    "typescript/no-this-alias": "off"
+  }
+}

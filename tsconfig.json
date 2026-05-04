@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
+    "incremental": true,
+    "lib": ["ESNEXT"],
+    "module": "nodenext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "tsBuildInfoFile": ".cache/tsc/main.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
+}

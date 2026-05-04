@@ -34,7 +34,7 @@ interface Page {
 
 function detectStackName(title: string): string | null {
   const match = stackPattern.exec(title);
-  return match ? match[1].trimEnd() : null;
+  return match?.[1]?.trimEnd() ?? null;
 }
 
 type Group =
