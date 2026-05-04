@@ -3,19 +3,19 @@
   "owner": {
     "name": "Helpfeel Inc."
   },
-  "description": "Cosense (旧Scrapbox) のAgent Skillとツール",
+  "description": "CosenseのAgent Skillとツール",
   "plugins": [
     {
       "name": "cosense-cli",
       "source": "./",
-      "description": "Cosense (旧Scrapbox) のページを読み・調べるAgent Skill",
-      "version": "0.0.1",
+      "description": "Cosenseのページを読み・調べるAgent Skill",
+      "version": "0.0.2",
       "author": {
         "name": "Helpfeel Inc."
       },
       "homepage": "https://github.com/nota/cosense-cli",
       "repository": "https://github.com/nota/cosense-cli",
-      "license": "UNLICENSED"
+      "license": "MIT"
     }
   ]
 }
