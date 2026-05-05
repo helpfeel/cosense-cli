@@ -1,5 +1,5 @@
 import { requestJson } from './request.ts';
-import { resolveServiceAccount } from './settings.ts';
+import { resolveCredential } from './settings.ts';
 
 interface UserInfo {
   name?: string;
@@ -50,8 +50,8 @@ export const fetchUserMap = async (
   if (cached) return cached;
 
   const apiUrl = `${origin}/api/projects/${projectName}/users`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = (await requestJson(apiUrl, { serviceAccount })) as UsersResponse;
+  const credential = resolveCredential(origin, projectName);
+  const data = (await requestJson(apiUrl, { credential })) as UsersResponse;
 
   const map: UserMap = new Map();
   for (const entry of data.users ?? []) {

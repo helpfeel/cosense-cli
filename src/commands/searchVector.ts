@@ -1,6 +1,6 @@
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { resolveServiceAccount } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const searchVectorSummary =
   'ベクトル検索でページを探す（タイトル+本文中リンク記法のみ対象）';
@@ -45,7 +45,7 @@ export const searchVector = async (args: string[]): Promise<void> => {
   }
   const { origin, projectName } = parseProjectUrl(url);
   const apiUrl = `${origin}/api/pages/${projectName}/search/vector/titles?q=${encodeURIComponent(query)}`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = await requestJson(apiUrl, { serviceAccount });
+  const credential = resolveCredential(origin, projectName);
+  const data = await requestJson(apiUrl, { credential });
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 };

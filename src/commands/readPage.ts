@@ -2,7 +2,7 @@ import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parsePageUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
 import { fetchUserMap, enrichUser } from '../lib/resolveUsers.ts';
-import { resolveServiceAccount } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const readPageSummary = '単一ページを読む';
 
@@ -88,8 +88,8 @@ export const readPage = async (args: string[]): Promise<void> => {
   if (!url) throw new Error('Usage: cosense readPage <pageUrl>');
   const { origin, projectName, encodedTitle } = parsePageUrl(url);
   const apiUrl = `${origin}/api/pages/v2/${projectName}/${encodedTitle}`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = (await requestJson(apiUrl, { serviceAccount })) as PageData;
+  const credential = resolveCredential(origin, projectName);
+  const data = (await requestJson(apiUrl, { credential })) as PageData;
 
   if ((data as { persistent?: boolean }).persistent === false) {
     for (const field of [

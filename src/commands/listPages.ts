@@ -2,7 +2,7 @@ import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
 import { fetchUserMap, enrichUser } from '../lib/resolveUsers.ts';
-import { resolveServiceAccount } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const listPagesSummary = 'プロジェクトのページ一覧を取得する';
 
@@ -134,8 +134,8 @@ export const listPages = async (args: string[]): Promise<void> => {
   if (skip) params.set('skip', skip);
   const queryString = params.toString();
   const apiUrl = `${origin}/api/pages/${projectName}/${queryString ? `?${queryString}` : ''}`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = (await requestJson(apiUrl, { serviceAccount })) as ListPagesData;
+  const credential = resolveCredential(origin, projectName);
+  const data = (await requestJson(apiUrl, { credential })) as ListPagesData;
 
   const userMap = await fetchUserMap(origin, projectName);
   for (const page of data.pages ?? []) {

@@ -21,8 +21,10 @@ export class HttpError extends Error {
   }
 }
 
+import type { Credential } from './settings.ts';
+
 interface RequestOptions {
-  serviceAccount?: string;
+  credential?: Credential;
 }
 
 export const requestJson = async (
@@ -30,8 +32,13 @@ export const requestJson = async (
   options?: RequestOptions
 ): Promise<unknown> => {
   const headers: Record<string, string> = {};
-  if (options?.serviceAccount) {
-    headers['x-service-account-access-key'] = options.serviceAccount;
+  const credential = options?.credential;
+  if (credential) {
+    if (credential.type === 'serviceAccount') {
+      headers['x-service-account-access-key'] = credential.value;
+    } else {
+      headers['x-personal-access-token'] = credential.value;
+    }
   }
   const res = await fetch(url, { headers });
   if (!res.ok) {

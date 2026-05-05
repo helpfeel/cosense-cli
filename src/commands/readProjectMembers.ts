@@ -1,7 +1,7 @@
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { resolveServiceAccount } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const readProjectMembersSummary = 'プロジェクトのメンバー一覧を取得する';
 
@@ -74,8 +74,8 @@ export const readProjectMembers = async (args: string[]): Promise<void> => {
   }
   const { origin, projectName } = parseProjectUrl(url);
   const apiUrl = `${origin}/api/projects/${projectName}/users`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = (await requestJson(apiUrl, { serviceAccount })) as {
+  const credential = resolveCredential(origin, projectName);
+  const data = (await requestJson(apiUrl, { credential })) as {
     users?: Record<string, unknown>[];
     memberSnapshots?: Record<string, unknown>[];
   };

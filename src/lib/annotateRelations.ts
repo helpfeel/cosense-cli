@@ -1,6 +1,6 @@
 import { parsePageUrl } from './parseUrl.ts';
 import { HttpError, requestJson } from './request.ts';
-import { resolveServiceAccount } from './settings.ts';
+import { resolveCredential } from './settings.ts';
 
 export type Relation = 'outgoing' | 'incoming' | 'bidirectional';
 
@@ -47,11 +47,11 @@ export const fetchRelatedPagesWithRelations = async (
   const queryParam = query ? `?search=${encodeURIComponent(query)}` : '';
   const startPageUrl = `${origin}/api/pages/v2/${projectName}/${encodedTitle}`;
   const relatedUrl = `${startPageUrl}/links1hop${queryParam}`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
+  const credential = resolveCredential(origin, projectName);
 
   const [startPageResult, relatedResult] = await Promise.allSettled([
-    requestJson(startPageUrl, { serviceAccount }),
-    requestJson(relatedUrl, { serviceAccount })
+    requestJson(startPageUrl, { credential }),
+    requestJson(relatedUrl, { credential })
   ]);
 
   // links1hop endpoint must succeed (it has its own backlinks-only fallback for non-existent pages)

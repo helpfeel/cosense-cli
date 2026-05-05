@@ -1,6 +1,6 @@
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { resolveServiceAccount } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const searchFullTextSummary = '本文全文を対象に検索する';
 
@@ -44,7 +44,7 @@ export const searchFullText = async (args: string[]): Promise<void> => {
   }
   const { origin, projectName } = parseProjectUrl(url);
   const apiUrl = `${origin}/api/pages/${projectName}/search/query?q=${encodeURIComponent(query)}`;
-  const serviceAccount = resolveServiceAccount(origin, projectName);
-  const data = await requestJson(apiUrl, { serviceAccount });
+  const credential = resolveCredential(origin, projectName);
+  const data = await requestJson(apiUrl, { credential });
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 };
