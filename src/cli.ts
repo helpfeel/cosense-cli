@@ -22,6 +22,7 @@ import {
   listPagesHelp,
   listPagesSummary
 } from './commands/listPages.ts';
+import { login, loginHelp, loginSummary } from './commands/login.ts';
 import {
   readPage,
   readPageHelp,
@@ -95,6 +96,7 @@ const commands: Record<string, CommandSpec> = {
     summary: list2hopLinksSummary,
     help: list2hopLinksHelp
   },
+  login: { handler: login, summary: loginSummary, help: loginHelp },
   searchVector: {
     handler: searchVector,
     summary: searchVectorSummary,

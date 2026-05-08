@@ -10,9 +10,19 @@ export class HttpError extends Error {
     url: string;
     body: string;
   }) {
-    super(
-      `HTTP ${params.status} ${params.statusText}\n${params.url}\n${params.body.slice(0, 500)}`
-    );
+    let message = `HTTP ${params.status} ${params.statusText}\n${params.url}\n${params.body.slice(0, 500)}`;
+    if (params.status === 401 || params.status === 403) {
+      let origin: string | undefined;
+      try {
+        origin = new URL(params.url).origin;
+      } catch {
+        origin = undefined;
+      }
+      if (origin) {
+        message += `\n\nRun \`cosense login ${origin}\` to authenticate.`;
+      }
+    }
+    super(message);
     this.name = 'HttpError';
     this.status = params.status;
     this.statusText = params.statusText;

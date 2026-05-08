@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 interface ProjectSetting {
   origin: string;
@@ -157,6 +157,60 @@ const loadSettings = (): Settings | null => {
   cache = { value };
   return value;
 };
+
+export const writeUserToken = (origin: string, token: string): void => {
+  let raw: Record<string, unknown>;
+  try {
+    const text = readFileSync(SETTINGS_PATH, 'utf8');
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error(
+        `${SETTINGS_PATH}: invalid JSON: ${err instanceof Error ? err.message : String(err)}`
+      );
+    }
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      throw new Error(`${SETTINGS_PATH}: must be an object`);
+    }
+    raw = parsed as Record<string, unknown>;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      raw = {};
+    } else {
+      throw err;
+    }
+  }
+
+  const existing = Array.isArray(raw.users) ? (raw.users as unknown[]) : [];
+  const filtered = existing.filter(entry => {
+    if (typeof entry !== 'object' || entry === null) return true;
+    const url = (entry as { url?: unknown }).url;
+    if (typeof url !== 'string') return true;
+    try {
+      return new URL(url).origin !== origin;
+    } catch {
+      return true;
+    }
+  });
+  filtered.push({ url: origin, token });
+  raw.users = filtered;
+
+  const dir = dirname(SETTINGS_PATH);
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  chmodSync(dir, 0o700);
+  writeFileSync(SETTINGS_PATH, `${JSON.stringify(raw, null, 2)}\n`, {
+    mode: 0o600
+  });
+  chmodSync(SETTINGS_PATH, 0o600);
+  cache = undefined;
+};
+
+export const settingsPath = SETTINGS_PATH;
 
 export const resolveCredential = (
   origin: string,
