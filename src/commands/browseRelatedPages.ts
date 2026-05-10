@@ -12,19 +12,26 @@ Usage:
   <pageUrl>  対象ページの完全なURL
 
 出力:
-  1-hop と 2-hop の関連ページを pageRank 降順で並べたタイトルの一覧（改行区切り）。
-  他のコマンドと異なり、JSON ではなくプレーンテキストを出力する。
+  1-hop と 2-hop の関連ページそれぞれを pageRank 降順で並べたタイトルの一覧。
+  他のコマンドと異なり、JSON ではなく Markdown 形式で出力する。
 
-  同一プレフィックスのページはスタックとして折りたたむ:
-    日記 2025-01-01
-    日記 2025-01-02
-    他、47件の日記を省略します
+  # Related Pages
+
+  ## 1 hop link
+
+  - タイトル
+  - 日記 2025-01-01
+    他、48件の日記を省略します
+
+  ## 2 hop link
+
+  - タイトル
 `;
 
 const stackPattern =
   /^([^\d]{3,})\s*([\d\-./()<>{}（）月火水木金土日年春夏秋冬]+|\d+ - [a-zA-Z])$/;
 
-const STACK_PREVIEW = 2;
+const STACK_PREVIEW = 1;
 
 interface Page {
   title: string;
@@ -33,8 +40,7 @@ interface Page {
 }
 
 function detectStackName(title: string): string | null {
-  const match = stackPattern.exec(title);
-  return match?.[1]?.trimEnd() ?? null;
+  return stackPattern.exec(title)?.[1] ?? null;
 }
 
 type Group =
@@ -69,14 +75,14 @@ function renderGroups(groups: Group[]): string {
   const lines: string[] = [];
   for (const group of groups) {
     if (group.type === 'page') {
-      lines.push(group.title);
+      lines.push(`- ${group.title}`);
     } else {
       for (const title of group.titles.slice(0, STACK_PREVIEW)) {
-        lines.push(title);
+        lines.push(`- ${title}`);
       }
       const remaining = group.titles.length - STACK_PREVIEW;
       if (remaining > 0) {
-        lines.push(`他、${remaining}件の${group.name}を省略します`);
+        lines.push(`  他、${remaining}件の${group.name.trimEnd()}を省略します`);
       }
     }
   }
@@ -98,38 +104,40 @@ export const browseRelatedPages = async (args: string[]): Promise<void> => {
     throw result1hop.reason;
   }
 
-  const seenTitleLc = new Set<string>();
-  const pages: Page[] = [];
-
   const toTitleLc = (title: string): string =>
     title.replace(/ /g, '_').toLowerCase();
 
-  if (result1hop.status === 'fulfilled') {
-    const data = result1hop.value as { links1hop?: Page[] };
-    for (const page of data.links1hop ?? []) {
+  const seenTitleLc = new Set<string>();
+  const collect = (pages: Page[] | undefined): Page[] => {
+    const collected: Page[] = [];
+    for (const page of pages ?? []) {
       const tlc = page.titleLc ?? toTitleLc(page.title);
       if (!seenTitleLc.has(tlc)) {
         seenTitleLc.add(tlc);
-        pages.push(page);
+        collected.push(page);
       }
     }
+    collected.sort((a, b) => (b.pageRank ?? 0) - (a.pageRank ?? 0));
+    return collected;
+  };
+
+  const pages1hop =
+    result1hop.status === 'fulfilled'
+      ? collect((result1hop.value as { links1hop?: Page[] }).links1hop)
+      : [];
+  const pages2hop =
+    result2hop.status === 'fulfilled'
+      ? collect((result2hop.value as { links2hop?: Page[] }).links2hop)
+      : [];
+
+  const sections: string[] = [];
+  if (pages1hop.length > 0) {
+    sections.push(`## 1 hop link\n\n${renderGroups(buildGroups(pages1hop))}`);
   }
-
-  if (result2hop.status === 'fulfilled') {
-    const data = result2hop.value as { links2hop?: Page[] };
-    for (const page of data.links2hop ?? []) {
-      const tlc = page.titleLc ?? toTitleLc(page.title);
-      if (!seenTitleLc.has(tlc)) {
-        seenTitleLc.add(tlc);
-        pages.push(page);
-      }
-    }
+  if (pages2hop.length > 0) {
+    sections.push(`## 2 hop link\n\n${renderGroups(buildGroups(pages2hop))}`);
   }
-
-  pages.sort((a, b) => (b.pageRank ?? 0) - (a.pageRank ?? 0));
-
-  const output = renderGroups(buildGroups(pages));
-  if (output) {
-    process.stdout.write(`${output}\n`);
+  if (sections.length > 0) {
+    process.stdout.write(`# Related Pages\n\n${sections.join('\n\n')}\n`);
   }
 };
