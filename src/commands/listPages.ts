@@ -1,7 +1,7 @@
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { fetchUserMap, enrichUser } from '../lib/resolveUsers.ts';
+import { enrichPageUsers, fetchUserMap } from '../lib/resolveUsers.ts';
 import { resolveCredential } from '../lib/settings.ts';
 
 export const listPagesSummary = 'プロジェクトのページ一覧を取得する';
@@ -35,12 +35,12 @@ Usage:
 
 各 Page の主なfield:
   id, title, image, descriptions,
-  user (作成者), lastUpdateUser (最終更新者、null の可能性あり),
+  user (作成者 User), lastUpdateUser (最終更新者 User | null), users (更新者リスト Array<User>),
   pin (pinned page なら正の値), views, linked,
   linesCount, charsCount,
   created, updated, accessed, lastAccessed (string)
 
-User の field（user / lastUpdateUser で共通）:
+User の field（user / lastUpdateUser / users[] で共通）:
   id           string   Cosense内部のID
   name         string?  ログイン名（自己紹介ページのタイトルや、本文中のアイコン記法で使われる）
   displayName  string?  表示名
@@ -119,6 +119,7 @@ const parseArgs = (args: string[]): ParsedArgs => {
 interface PageEntry {
   user?: { id: string } | null;
   lastUpdateUser?: { id: string } | null;
+  users?: { id: string }[];
 }
 
 interface ListPagesData {
@@ -139,8 +140,7 @@ export const listPages = async (args: string[]): Promise<void> => {
 
   const userMap = await fetchUserMap(origin, projectName);
   for (const page of data.pages ?? []) {
-    enrichUser(page.user, userMap);
-    enrichUser(page.lastUpdateUser, userMap);
+    enrichPageUsers(page, userMap);
     enrichTimestampsOf(page as Record<string, unknown>);
   }
 

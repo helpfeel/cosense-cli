@@ -89,3 +89,19 @@ export const enrichUser = <T extends { id?: unknown }>(
   if (!info) return user as T & UserRef;
   return Object.assign(user, info) as T & UserRef;
 };
+
+interface UserRefHolder {
+  user?: { id?: unknown } | null;
+  lastUpdateUser?: { id?: unknown } | null;
+  users?: ({ id?: unknown } | null | undefined)[];
+}
+
+export const enrichPageUsers = (
+  page: UserRefHolder | null | undefined,
+  userMap: UserMap
+): void => {
+  if (!page) return;
+  enrichUser(page.user, userMap);
+  enrichUser(page.lastUpdateUser, userMap);
+  for (const editor of page.users ?? []) enrichUser(editor, userMap);
+};

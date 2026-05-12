@@ -1,5 +1,7 @@
+import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
+import { enrichPageUsers, fetchUserMap } from '../lib/resolveUsers.ts';
 import { resolveCredential } from '../lib/settings.ts';
 
 export const searchVectorSummary =
@@ -15,14 +17,25 @@ Usage:
   <query>       検索クエリ
 
 戻り値（top-levelの主なkey）:
-  pages  Array<{ id, title, image, score, exists }>  類似度順のヒット結果
+  pages  Array<Page>  類似度順のヒット結果
 
 各 page の field:
-  id      string   ページID
-  title   string   ページタイトル
-  image   string   サムネイル画像URL
-  score   number   類似度スコア（高いほど近い）
-  exists  boolean  実体のあるページなら true。false の場合は空ページ（リンク記法だけ存在）
+  title           string          ページタイトル
+  image           string          サムネイル画像URL
+  score           number          類似度スコア（高いほど近い）
+  exists          boolean         実体のあるページなら true。false の場合は空ページ（リンク記法だけ存在）
+
+  exists=true のページのみ追加で付くfield:
+    id              string          ページID
+    user            User            作成者
+    lastUpdateUser  User | null     最終更新者
+    users           Array<User>     更新者リスト
+
+User の field（user / lastUpdateUser / users[] で共通）:
+  id           string   Cosense内部のID
+  name         string?  ログイン名（自己紹介ページのタイトルや、本文中のアイコン記法で使われる）
+  displayName  string?  表示名
+  email        string?  メールアドレス
 
 検索対象:
   - ページタイトル + 本文中のリンク記法（[title]）のみ
@@ -33,10 +46,18 @@ Usage:
 {
   "pages": [
     { "id": "...", "title": "vibe coding", "score": 0.833, "exists": true },
-    { "id": "...", "title": "bug修正", "score": 0.811, "exists": false }
+    { "title": "bug修正", "score": 0.811, "exists": false }
   ]
 }
 `;
+
+interface SearchVectorData {
+  pages?: {
+    user?: { id: string } | null;
+    lastUpdateUser?: { id: string } | null;
+    users?: { id: string }[];
+  }[];
+}
 
 export const searchVector = async (args: string[]): Promise<void> => {
   const [url, query] = args;
@@ -46,6 +67,13 @@ export const searchVector = async (args: string[]): Promise<void> => {
   const { origin, projectName } = parseProjectUrl(url);
   const apiUrl = `${origin}/api/pages/${projectName}/search/vector/titles?q=${encodeURIComponent(query)}`;
   const credential = resolveCredential(origin, projectName);
-  const data = await requestJson(apiUrl, { credential });
+  const data = (await requestJson(apiUrl, { credential })) as SearchVectorData;
+
+  const userMap = await fetchUserMap(origin, projectName);
+  for (const page of data.pages ?? []) {
+    enrichPageUsers(page, userMap);
+    enrichTimestampsOf(page as Record<string, unknown>);
+  }
+
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 };

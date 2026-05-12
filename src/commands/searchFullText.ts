@@ -1,5 +1,7 @@
+import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import { parseProjectUrl } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
+import { enrichPageUsers, fetchUserMap } from '../lib/resolveUsers.ts';
 import { resolveCredential } from '../lib/settings.ts';
 
 export const searchFullTextSummary = '本文全文を対象に検索する';
@@ -22,10 +24,19 @@ Usage:
   existsExactTitleMatch  boolean        タイトル完全一致がある場合 true
 
 各 Page の field:
-  id     string    ページID
-  title  string    ページタイトル
-  words  string[]  マッチした語の一覧
-  lines  string[]  マッチした本文の行
+  id              string         ページID
+  title           string         ページタイトル
+  user            User           作成者
+  lastUpdateUser  User | null    最終更新者
+  users           Array<User>    更新者リスト
+  words           string[]       マッチした語の一覧
+  lines           string[]       マッチした本文の行
+
+User の field（user / lastUpdateUser / users[] で共通）:
+  id           string   Cosense内部のID
+  name         string?  ログイン名（自己紹介ページのタイトルや、本文中のアイコン記法で使われる）
+  displayName  string?  表示名
+  email        string?  メールアドレス
 
 戻り値のJSON抜粋例:
 {
@@ -37,6 +48,14 @@ Usage:
 }
 `;
 
+interface SearchFullTextData {
+  pages?: {
+    user?: { id: string } | null;
+    lastUpdateUser?: { id: string } | null;
+    users?: { id: string }[];
+  }[];
+}
+
 export const searchFullText = async (args: string[]): Promise<void> => {
   const [url, query] = args;
   if (!url || !query) {
@@ -45,6 +64,15 @@ export const searchFullText = async (args: string[]): Promise<void> => {
   const { origin, projectName } = parseProjectUrl(url);
   const apiUrl = `${origin}/api/pages/${projectName}/search/query?q=${encodeURIComponent(query)}`;
   const credential = resolveCredential(origin, projectName);
-  const data = await requestJson(apiUrl, { credential });
+  const data = (await requestJson(apiUrl, {
+    credential
+  })) as SearchFullTextData;
+
+  const userMap = await fetchUserMap(origin, projectName);
+  for (const page of data.pages ?? []) {
+    enrichPageUsers(page, userMap);
+    enrichTimestampsOf(page as Record<string, unknown>);
+  }
+
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 };

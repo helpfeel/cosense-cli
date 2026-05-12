@@ -1,5 +1,7 @@
 import { fetchRelatedPagesWithRelations } from '../lib/annotateRelations.ts';
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
+import { parsePageUrl } from '../lib/parseUrl.ts';
+import { enrichPageUsers, fetchUserMap } from '../lib/resolveUsers.ts';
 
 export const search1hopLinksSummary = '1-hop近傍を全文検索でフィルタする';
 
@@ -28,8 +30,13 @@ export const search1hopLinks = async (args: string[]): Promise<void> => {
   if (args.length !== 2 || !url || !query || query.trim() === '') {
     throw new Error('Usage: cosense search1hopLinks <pageUrl> <query>');
   }
-  const data = await fetchRelatedPagesWithRelations(url, query);
+  const { origin, projectName } = parsePageUrl(url);
+  const [data, userMap] = await Promise.all([
+    fetchRelatedPagesWithRelations(url, query),
+    fetchUserMap(origin, projectName)
+  ]);
   for (const page of (data as { links1hop?: unknown[] }).links1hop ?? []) {
+    enrichPageUsers(page as Record<string, unknown>, userMap);
     enrichTimestampsOf(page as Record<string, unknown>);
   }
   process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
