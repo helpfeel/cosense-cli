@@ -67,7 +67,7 @@ oxfmt <changed-file>
 ### コード変更後およびgit commit前にlintを実行すること
 
 ```
-bin/docker-npm-lint
+npm run lint
 ```
 
 コード品質を保ち、追加のformatting commitを防ぐ。
