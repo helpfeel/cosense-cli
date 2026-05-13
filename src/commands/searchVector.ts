@@ -30,6 +30,13 @@ Usage:
     user            User            作成者
     lastUpdateUser  User | null     最終更新者
     users           Array<User>     更新者リスト
+    views           number          閲覧数
+    linked          number          被リンク数
+    created         string          作成日時
+    updated         string          更新日時
+    pageRank        number          PageRank
+    linesCount      number          行数
+    charsCount      number          文字数
 
 User の field（user / lastUpdateUser / users[] で共通）:
   id           string   Cosense内部のID
