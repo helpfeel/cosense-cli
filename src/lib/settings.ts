@@ -231,3 +231,16 @@ export const resolveCredential = (
   }
   return undefined;
 };
+
+export const resolveUserCredential = (
+  origin: string
+): Credential | undefined => {
+  const settings = loadSettings();
+  if (!settings) return undefined;
+  for (const user of settings.users) {
+    if (user.origin === origin) {
+      return { type: 'personalAccessToken', value: user.token };
+    }
+  }
+  return undefined;
+};

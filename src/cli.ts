@@ -53,6 +53,7 @@ import {
   searchVectorHelp,
   searchVectorSummary
 } from './commands/searchVector.ts';
+import { whoami, whoamiHelp, whoamiSummary } from './commands/whoami.ts';
 
 interface CommandSpec {
   handler: (args: string[]) => Promise<void>;
@@ -71,6 +72,7 @@ const { version } = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
 
 const commands: Record<string, CommandSpec> = {
   login: { handler: login, summary: loginSummary, help: loginHelp },
+  whoami: { handler: whoami, summary: whoamiSummary, help: whoamiHelp },
   browseRelatedPages: {
     handler: browseRelatedPages,
     summary: browseRelatedPagesSummary,

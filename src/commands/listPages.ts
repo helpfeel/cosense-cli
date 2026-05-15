@@ -29,6 +29,7 @@ Usage:
                   本文中に [name.icon] を持つページと
                   指定したnameを持つユーザーがこれまでに編集したページが返る
                   ユーザー名で絞り込む場合は user.displayName ではなく users.name を指定する
+                  自分の名前は whoami コマンドで確認できる
 
 戻り値（top-levelの主なkey）:
   projectName  string        プロジェクト名

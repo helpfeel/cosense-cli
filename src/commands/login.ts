@@ -1,3 +1,4 @@
+import { parseOrigin } from '../lib/parseUrl.ts';
 import { settingsPath, writeUserToken } from '../lib/settings.ts';
 
 export const loginSummary = 'Personal Access Tokenを設定ファイルに保存する';
@@ -17,19 +18,6 @@ Usage:
   - 設定ファイルとディレクトリは存在しなければ作成する（dir 0700, file 0600）
   - interactive terminal（TTY）でのみ動作する
 `;
-
-const parseOrigin = (input: string): string => {
-  let url: URL;
-  try {
-    url = new URL(input);
-  } catch {
-    throw new Error(`<origin> is not a valid URL: ${input}`);
-  }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error(`<origin> must use http: or https: scheme: ${input}`);
-  }
-  return url.origin;
-};
 
 const readMaskedLine = async (): Promise<string> => {
   if (!process.stdin.isTTY) {
