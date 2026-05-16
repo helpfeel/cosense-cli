@@ -22,6 +22,11 @@ import {
   listPagesHelp,
   listPagesSummary
 } from './commands/listPages.ts';
+import {
+  listProjects,
+  listProjectsHelp,
+  listProjectsSummary
+} from './commands/listProjects.ts';
 import { login, loginHelp, loginSummary } from './commands/login.ts';
 import {
   readPage,
@@ -73,6 +78,11 @@ const { version } = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
 const commands: Record<string, CommandSpec> = {
   login: { handler: login, summary: loginSummary, help: loginHelp },
   whoami: { handler: whoami, summary: whoamiSummary, help: whoamiHelp },
+  listProjects: {
+    handler: listProjects,
+    summary: listProjectsSummary,
+    help: listProjectsHelp
+  },
   browseRelatedPages: {
     handler: browseRelatedPages,
     summary: browseRelatedPagesSummary,
