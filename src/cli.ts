@@ -29,6 +29,11 @@ import {
 } from './commands/listProjects.ts';
 import { login, loginHelp, loginSummary } from './commands/login.ts';
 import {
+  previewEdit,
+  previewEditHelp,
+  previewEditSummary
+} from './commands/previewEdit.ts';
+import {
   readPage,
   readPageHelp,
   readPageSummary
@@ -38,6 +43,11 @@ import {
   readProjectMembersHelp,
   readProjectMembersSummary
 } from './commands/readProjectMembers.ts';
+import {
+  submitEdit,
+  submitEditHelp,
+  submitEditSummary
+} from './commands/submitEdit.ts';
 import {
   search1hopLinks,
   search1hopLinksHelp,
@@ -128,6 +138,16 @@ const commands: Record<string, CommandSpec> = {
     handler: search2hopLinks,
     summary: search2hopLinksSummary,
     help: search2hopLinksHelp
+  },
+  previewEdit: {
+    handler: previewEdit,
+    summary: previewEditSummary,
+    help: previewEditHelp
+  },
+  submitEdit: {
+    handler: submitEdit,
+    summary: submitEditSummary,
+    help: submitEditHelp
   }
 };
 

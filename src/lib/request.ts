@@ -35,6 +35,8 @@ import type { Credential } from './settings.ts';
 
 interface RequestOptions {
   credential?: Credential;
+  method?: 'GET' | 'POST';
+  body?: unknown;
 }
 
 export const requestJson = async (
@@ -50,7 +52,13 @@ export const requestJson = async (
       headers['x-personal-access-token'] = credential.value;
     }
   }
-  const res = await fetch(url, { headers });
+  const method = options?.method ?? 'GET';
+  const init: RequestInit = { method, headers };
+  if (options?.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    init.body = JSON.stringify(options.body);
+  }
+  const res = await fetch(url, init);
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new HttpError({
