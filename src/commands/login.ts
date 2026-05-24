@@ -17,6 +17,9 @@ Usage:
   - 同じoriginの既存entryは上書きされる
   - 設定ファイルとディレクトリは存在しなければ作成する（dir 0700, file 0600）
   - interactive terminal（TTY）でのみ動作する
+
+環境変数:
+  COSENSE_PAT  設定されていれば、ファイルに保存された認証情報より優先される
 `;
 
 const readMaskedLine = async (): Promise<string> => {

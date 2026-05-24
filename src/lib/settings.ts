@@ -212,10 +212,20 @@ export const writeUserToken = (origin: string, token: string): void => {
 
 export const settingsPath = SETTINGS_PATH;
 
+const readEnvPatCredential = (): Credential | undefined => {
+  const raw = process.env.COSENSE_PAT;
+  if (typeof raw !== 'string') return undefined;
+  const value = raw.trim();
+  if (value === '') return undefined;
+  return { type: 'personalAccessToken', value };
+};
+
 export const resolveCredential = (
   origin: string,
   projectName: string
 ): Credential | undefined => {
+  const envCredential = readEnvPatCredential();
+  if (envCredential) return envCredential;
   const settings = loadSettings();
   if (!settings) return undefined;
   const projectNameLc = projectName.toLowerCase();
@@ -235,6 +245,8 @@ export const resolveCredential = (
 export const resolveUserCredential = (
   origin: string
 ): Credential | undefined => {
+  const envCredential = readEnvPatCredential();
+  if (envCredential) return envCredential;
   const settings = loadSettings();
   if (!settings) return undefined;
   for (const user of settings.users) {
