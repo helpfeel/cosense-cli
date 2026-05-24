@@ -17,7 +17,9 @@ Usage:
 戻り値（top-levelの主なkey）:
   title          string               ページタイトル
   persistent     boolean              実体のあるページなら true。false でも関連ページリストは存在する場合がある
-  lines          Array<Line>          本文の行配列。Line = { id, text, user, created, updated }
+  id             string               ページID (persistent: true の時のみ)
+  commitId       string               最新コミットID (persistent: true の時のみ)
+  lines          Array<Line>          本文の行配列。Line = { id, text, user, created, updated } (id および user/timestamp 系は persistent: true の時のみ)
   pageRank       number               ページの重要度指標。被リンクから計算される
   linked         number               被リンク数
   views          number               閲覧数
@@ -45,6 +47,7 @@ User の field（user / lastUpdateUser / users[] / lines[].user で共通）:
   "persistent": true,
   "lines": [
     {
+      "id": "57bb9aa9c2e0ec0011d2e72b",
       "text": "shokai",
       "user": { "id": "5724627723541f110097c291", "name": "shokai" },
       "created": "2016-08-22T14:35+09:00 (9 years ago)",
@@ -92,7 +95,13 @@ export const readPage = async (args: string[]): Promise<void> => {
   const data = (await requestJson(apiUrl, { credential })) as PageData;
 
   if ((data as { persistent?: boolean }).persistent === false) {
+    // 非存在ページに対してサーバーが返すテンプレートには、 仮の pageId / commitId / lines[0].id
+    // が含まれる。 そのまま AI に渡すと previewEdit の anchor に fake な lineId を使ってしまい
+    // 422 になる。 anchor に使えそうな field をここで全部削除し、 新規ページでは "_end" を
+    // 使うしかない状態にする
     for (const field of [
+      'id',
+      'commitId',
       'user',
       'lastUpdateUser',
       'users',
@@ -106,7 +115,7 @@ export const readPage = async (args: string[]): Promise<void> => {
       delete (data as Record<string, unknown>)[field];
     }
     for (const line of data.lines ?? []) {
-      for (const field of ['userId', 'user', 'created', 'updated']) {
+      for (const field of ['id', 'userId', 'user', 'created', 'updated']) {
         delete (line as Record<string, unknown>)[field];
       }
     }

@@ -31,17 +31,30 @@ export const parseProjectUrl = (input: string): ProjectUrl => {
   return { origin: u.origin, projectName: parts[0] as string };
 };
 
+export const parseProjectUrlStrict = (input: string): ProjectUrl => {
+  const u = new URL(input);
+  if (u.search || u.hash) {
+    throw new Error(`Project URL must not have query/hash, got: ${input}`);
+  }
+  const m = u.pathname.match(/^\/([^/]+)\/?$/);
+  if (!m) {
+    throw new Error(
+      `Project URL must be https://<host>/<project> (no extra path), got: ${input}`
+    );
+  }
+  return { origin: u.origin, projectName: m[1] as string };
+};
+
 export const parsePageUrl = (input: string): PageUrl => {
   const u = new URL(input);
-  const parts = u.pathname.split('/').filter(Boolean);
-  if (parts.length < 2) {
+  const m = u.pathname.match(/^\/([^/]+)\/(.+?)\/?$/);
+  if (!m) {
     throw new Error(
       `Page URL must be https://<host>/<project>/<title>, got: ${input}`
     );
   }
-  return {
-    origin: u.origin,
-    projectName: parts[0] as string,
-    encodedTitle: parts[1] as string
-  };
+  const projectName = m[1] as string;
+  const rawTail = m[2] as string;
+  const encodedTitle = rawTail.replace(/\//g, '%2F');
+  return { origin: u.origin, projectName, encodedTitle };
 };
