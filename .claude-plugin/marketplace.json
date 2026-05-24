@@ -8,8 +8,8 @@
     {
       "name": "cosense-cli",
       "source": "./",
-      "description": "Cosenseのページを読み・調べるAgent Skill",
-      "version": "1.0.0",
+      "description": "Cosenseのページを読み・調べ・編集するAgent Skill",
+      "version": "1.1.0",
       "author": {
         "name": "Helpfeel Inc."
       },
