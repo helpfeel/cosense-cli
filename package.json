@@ -1,6 +1,6 @@
 {
   "name": "@helpfeel/cosense-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cosense (旧Scrapbox) のページを読み・調べるCLI",
   "homepage": "https://github.com/nota/cosense-cli",
   "license": "MIT",
