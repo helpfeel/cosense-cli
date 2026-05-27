@@ -7,7 +7,7 @@ Cosenseのページを読み・調べ・編集する為のCLIとAgent Skill
 ### CLI
 
 ```bash
-npm install -g https://github.com/helpfeel/cosense-cli
+npm install -g @helpfeel/cosense-cli
 cosense --help
 ```
 
