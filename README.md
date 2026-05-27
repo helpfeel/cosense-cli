@@ -7,14 +7,14 @@ Cosenseのページを読み・調べ・編集する為のCLIとAgent Skill
 ### CLI
 
 ```bash
-npm install -g https://github.com/nota/cosense-cli
+npm install -g https://github.com/helpfeel/cosense-cli
 cosense --help
 ```
 
 ### Claude Code Agent Skill
 
 ```
-/plugin marketplace add nota/cosense-cli
+/plugin marketplace add helpfeel/cosense-cli
 ```
 
 ```
