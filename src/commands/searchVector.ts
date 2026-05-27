@@ -19,7 +19,7 @@ Usage:
 戻り値（top-levelの主なkey）:
   pages  Array<Page>  類似度順のヒット結果
 
-各 page の field:
+各 Page の field:
   title           string          ページタイトル
   image           string          サムネイル画像URL
   score           number          類似度スコア（高いほど近い）
@@ -47,7 +47,6 @@ User の field（user / lastUpdateUser / users[] で共通）:
 検索対象:
   - ページタイトル + 本文中のリンク記法（[title]）のみ
   - 本文の通常テキストは検索対象外
-  - 本文の語で検索したい時は searchFullText を使う
 
 戻り値のJSON抜粋例:
 {

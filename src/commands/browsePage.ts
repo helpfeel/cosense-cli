@@ -52,7 +52,7 @@ Usage:
   ## 1 hop link
     このページの 1-hop 近傍ページタイトル一覧。 1-hop が 0 件なら区切り線ごと省略
 
-非存在ページ (persistent: false):
+persistent: false の時:
   メタデータ・アイコン・テロメアは省略。 (このページはまだ作成されていません) と
   本文（テンプレート）と Related Pages を出力する
 

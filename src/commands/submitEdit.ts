@@ -34,9 +34,7 @@ HTTPエラー:
   HTTP 409 {"error":"DuplicateTitle"}
             preview→submit の間に他人が同名ページを作った (race condition)
 
-ワークフロー:
-  previewIdは1回しか使えない (consume-on-submit)。submitに失敗したら previewEdit から
-  やり直す。previewIdは5分でexpireするので submit は迅速に。
+previewId は1回限り (consume-on-submit)。submit 後・5分 expire 後・consume 済みは HTTP 404。
 `;
 
 interface SubmitResponse {

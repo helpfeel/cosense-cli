@@ -7,9 +7,9 @@ import {
 import { fetchRelatedPages } from '../lib/relatedPages.ts';
 
 export const browseRelatedPagesSummary =
-  '1-hop+2-hopのタイトル一覧を眺める。単独のページだけを見ていては掴みきれない文脈が浮かび上がる';
+  '1-hop+2-hopの関連ページタイトル一覧をAIが読みやすい形式で出力する';
 
-export const browseRelatedPagesHelp = `browseRelatedPages - 1-hop+2-hopのタイトル一覧を眺める。単独のページだけを見ていては掴みきれない文脈が浮かび上がる
+export const browseRelatedPagesHelp = `browseRelatedPages - 1-hop+2-hopの関連ページタイトル一覧をAIが読みやすい形式で出力する
 
 Usage:
   cosense browseRelatedPages <pageUrl>

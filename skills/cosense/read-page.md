@@ -25,14 +25,16 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 ユーザーの質問文から単語を2〜3個抜き出して、まとめてベクトル検索するのも効果的である。
 短く抽象的なタイトルのページには、重要な原理原則が書かれている事がある。
 
+複数キーワードを試したい時は、 `searchVector` / `searchFullText` / `search1hopLinks` / `search2hopLinks` のいずれも OR 検索できないので、 クエリを分解して複数回叩く。
+
 ##### ベクトル検索結果の読み方
 
 - `score` と `title` を総合判断して起点候補を複数選ぶ
-- `exists: false` のページも起点に採用してよい。本文が無くても関連ページリストから文脈が掴めるから
+- `exists` field に注目する。 起点として採用しない理由にはしない。 false のページも関連ページリストから文脈が掴めるため起点候補に含めてよい
 
 #### 良い起点が見つからない場合
 
-`searchFullText` で本文に当該語を含むページを探す。
+`searchVector` はタイトル＋本文中リンク記法だけが検索対象。 本文の語そのもので探したい時は `searchFullText` を使う。
 
 起点候補が決まったら「どこまで辿るかをユーザーに確認する」へ進む。
 
@@ -94,7 +96,11 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 
 - `list1hopLinks`: 構造化JSONで1-hop近傍メタデータを一括取得する。`descriptions` / `relation` / `pageRank` を見て深掘り候補を選びたい時
 - `search1hopLinks`: 既知のキーワードで1-hop近傍を絞り込みたい時
-- `browseRelatedPages`: Markdown形式のタイトル一覧。2-hop先まで広く眺めて文脈を掴みたい時
+- `list2hopLinks`: 1-hopだけでは文脈が薄い時に、2-hop候補を構造化JSONで見る。全件読まず、 `title` / `descriptions` / `pageRank` で候補を絞る
+- `search2hopLinks`: 2-hop範囲を既知のキーワードで絞る。広く探すより、仮説がある時に使う
+- `browseRelatedPages`: 1-hop+2-hop のタイトル一覧を AI が読みやすい形式で眺める。2-hop 先まで広く文脈を掴みたい時
+- `listPages`: プロジェクト全体から最近更新・被リンク数・タイトル順などで入口ページを探したい時
+- `readProjectMembers`: 人名・アイコン・編集者の同定が回答に必要な時だけ使う
 
 各要素の `relation` に注目する。参照方向は深掘り優先順位の判断材料になる。
 

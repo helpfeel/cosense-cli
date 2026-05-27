@@ -1,20 +1,20 @@
-# CLIとSkillのバージョン互換性を確認する手順書
+# CLIの挙動不一致を診断する手順書
 
-CLIの挙動が手順書と食い違っている時、Skillが想定するCLIバージョンと、インストール済みCLIのバージョンがズレている可能性を確認する。
+CLIの挙動が手順書と食い違う時は、Skill version と CLI version の semver 一致ではなく、実際に使うCLIのhelpを確認する。
 
 ## 手順
 
-1. Skill自身のバージョンを取得する。このファイルから見て `../../.claude-plugin/marketplace.json` を読み、`plugins[]` から `name === "cosense-cli"` のentryの `version` を取得する
-2. インストール済みCLIのバージョンを取得する。`cosense --version` を実行し、`cosense v0.2.1` のような出力から数字部分を抽出する
-3. 両者の major と minor を比較する
-   - 一致 (例: 両方 0.2.x): 互換性問題ではない。別原因を調査する
-   - 不一致 (例: Skill 0.2.x / CLI 0.3.y): 次の手順へ
-4. ユーザーに以下を伝える:
-   - Skillが想定するバージョンとインストール済みCLIのバージョンがズレている (具体的な番号も示す)
-   - CLIかSkillのどちらかを更新して、バージョンを合わせる必要がある:
-   - 更新後、最初に失敗した操作をリトライする
+1. `cosense --version` を実行し、インストール済みCLIのバージョンを控える
+2. `cosense --help` を読み、使おうとしている command が存在するか確認する
+3. command が存在する場合は `cosense <command> --help` を読み、必要な引数・option・戻り値・HTTPエラーが手順と合っているか確認する
+4. command / option / 戻り値が手順書と食い違う場合は、ユーザーに以下を伝え、 更新後に同じ操作を再試行してもらう:
+   - 発生した症状
+   - インストール済みCLIバージョン (`cosense --version` の値)
+   - Skill/plugin側のバージョン (`.claude-plugin/marketplace.json` の `plugins[].version`)
+   - CLIまたはSkillのどちらかが古い可能性があるため更新が必要
+5. help と手順書が一致している場合は、バージョン問題ではなく、認証・URL・権限・入力データ・HTTPエラーとして調査する
 
-## 補足事項
+## 注意
 
-- patch差は無視する (0.2.0 ↔ 0.2.1 はOK)
-- CLIはまだnpmjs.comにpublishされていないため、CLI最新版の番号は取得できない。Skill想定とのズレのみ判定する
+- Skill/plugin version (marketplace.json) と CLI version (npm package) は管理単位が違う。major/minor が一致しないことだけで互換性問題と判定しない
+- CLI最新版は `npm view @helpfeel/cosense-cli version` で確認できる

@@ -22,7 +22,7 @@ Usage:
   search  検索ハイライト情報
 
 検索の制約:
-  - OR検索不可。複数キーワードを試したい時はクエリを分解して複数回叩く
+  - OR検索不可
 `;
 
 export const search2hopLinks = async (args: string[]): Promise<void> => {

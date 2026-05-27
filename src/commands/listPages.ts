@@ -52,7 +52,7 @@ User の field（user / lastUpdateUser / users[] で共通）:
   email        string?  メールアドレス
 
 注意:
-  - ページ本文（lines）は含まれない。本文が必要なら readPage を使う
+  - ページ本文（lines）は含まれない
   - 1000件を超える件数を1リクエストで取ることはできない。--skip でページネーションする
 `;
 

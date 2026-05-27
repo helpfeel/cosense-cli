@@ -16,7 +16,7 @@ Usage:
 
 戻り値（top-levelの主なkey）:
   title          string               ページタイトル
-  persistent     boolean              実体のあるページなら true。false でも関連ページリストは存在する場合がある
+  persistent     boolean              実体のあるページなら true。false は未作成の新規ページ（関連ページリストは存在する場合がある）
   id             string               ページID (persistent: true の時のみ)
   commitId       string               最新コミットID (persistent: true の時のみ)
   lines          Array<Line>          本文の行配列。Line = { id, text, user, created, updated } (id および user/timestamp 系は persistent: true の時のみ)

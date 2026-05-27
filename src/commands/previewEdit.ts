@@ -9,14 +9,15 @@ export const previewEditSummary =
 export const previewEditHelp = `previewEdit - ページ編集opsをdry-runしてpreviewIdを取得する
 
 Usage:
-  cosense previewEdit <projectUrl> <pageId> < ops.json    既存ページの編集 (stdinはops JSON)
-  cosense previewEdit --new <projectUrl> < body.txt       新規ページ作成 (stdinはプレーンテキスト本文)
-  echo '<opsJSON>' | cosense previewEdit <projectUrl> <pageId>
-  echo '<text>'    | cosense previewEdit --new <projectUrl>
+  cosense previewEdit <projectUrl> <pageId> < ops.json      既存ページの編集 (stdinはops JSON)
+  cosense previewEdit --new <projectUrl> < body.txt         新規ページ作成 (stdinはプレーンテキスト本文)
+  printf '%s' '<opsJSON>' | cosense previewEdit <projectUrl> <pageId>
+  printf '%s' '<text>'    | cosense previewEdit --new <projectUrl>
 
 引数:
   <projectUrl>  プロジェクトのURL (例: https://scrapbox.io/shokai)。 末尾に余分なpathがあるとerror
   <pageId>      編集対象ページのID。 readPage 出力の top-level "id" field から取得する
+                ops 内の <lineId> は readPage 出力の lines[].id から取得する
 
 オプション:
   --new   stdin をプレーンテキスト本文として受け取り、 新規ページを作る。 改行で複数行に分割され、
@@ -36,12 +37,9 @@ stdinから受け取る入力形式（既存ページ編集モード, JSON）:
   replace:      <lineId> の本文を置き換える。textは単行のみ。改行を含むtextは拒否される
   delete:       <lineId> の行を削除する
 
-  「特定行を複数行に分割したい」場合は、insertBefore で対象lineIdの直前に複数行を挿入してから、
-  対象行を delete する。ops は配列順に適用されるので「先に delete してから insertBefore」 とすると
-  anchor が消えて 422 になる。
-
-  ops は順次適用される。同じ lineId に対する insertBefore を [A, B, C] の順で並べると、
-  適用後の行順は元行の直前に [A, B, C] が並ぶ（入力順が保たれる）。
+  ops は配列順に適用される。同じ anchor に対する insertBefore を [A, B, C] の順で並べると、
+  適用後の行順は元行の直前に [A, B, C] が並ぶ（入力順が保たれる）。anchor は適用時点で存在
+  する必要がある（消えた lineId を anchor に指定すると 422）。
 
 戻り値（plain text）:
   previewId / expireAt / status (create or update) / project / title のヘッダー +
@@ -49,8 +47,7 @@ stdinから受け取る入力形式（既存ページ編集モード, JSON）:
   変更行の頭には > (新規) または * (更新) のマーカーと末尾 # <lineId> が付く。
   既存行(変更なし)はマーカーなし。
   preview は dry-run なのでこの段階ではpage URLは確定しない。 確定URLは submitEdit の出力で確認する。
-
-  submitEdit でこのpreviewIdを渡してcommitを確定する。previewIdは5分でexpireする。
+  previewId は submitEdit に渡して commit を確定する。5分で expire する。
 
 HTTPエラー:
   HTTP 401  認証なし
@@ -59,18 +56,6 @@ HTTPエラー:
   HTTP 409 {"error":"NotFastForward","latest":...}
             preview生成後にページが更新された。最新stateを再取得して ops を作り直す必要がある
   HTTP 422  ops が不正/存在しないlineId/replace に多行textを渡した等
-
-ワークフロー例（既存ページの編集）:
-  cosense readPage https://scrapbox.io/shokai/foo > page.json
-  # page.json から top-level id (pageId) と編集したい行の lineId を把握する
-  cosense previewEdit https://scrapbox.io/shokai <pageId> < ops.json
-  # 出力の plain text を読み、適用後の状態を確認してから submit
-  cosense submitEdit https://scrapbox.io/shokai <previewId>
-
-ワークフロー例（新規ページ作成）:
-  printf 'ページタイトル\\n本文1行目\\n本文2行目\\n' \\
-    | cosense previewEdit --new https://scrapbox.io/shokai
-  cosense submitEdit https://scrapbox.io/shokai <previewId>
 `;
 
 interface InsertBeforeOp {
