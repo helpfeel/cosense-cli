@@ -158,8 +158,7 @@ const loadSettings = (): Settings | null => {
   return value;
 };
 
-export const writeUserToken = (origin: string, token: string): void => {
-  let raw: Record<string, unknown>;
+const readRawSettings = (): Record<string, unknown> => {
   try {
     const text = readFileSync(SETTINGS_PATH, 'utf8');
     let parsed: unknown;
@@ -177,15 +176,28 @@ export const writeUserToken = (origin: string, token: string): void => {
     ) {
       throw new Error(`${SETTINGS_PATH}: must be an object`);
     }
-    raw = parsed as Record<string, unknown>;
+    return parsed as Record<string, unknown>;
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
-      raw = {};
-    } else {
-      throw err;
+      return {};
     }
+    throw err;
   }
+};
 
+const writeRawSettings = (raw: Record<string, unknown>): void => {
+  const dir = dirname(SETTINGS_PATH);
+  mkdirSync(dir, { recursive: true, mode: 0o700 });
+  chmodSync(dir, 0o700);
+  writeFileSync(SETTINGS_PATH, `${JSON.stringify(raw, null, 2)}\n`, {
+    mode: 0o600
+  });
+  chmodSync(SETTINGS_PATH, 0o600);
+  cache = undefined;
+};
+
+export const writeUserToken = (origin: string, token: string): void => {
+  const raw = readRawSettings();
   const existing = Array.isArray(raw.users) ? (raw.users as unknown[]) : [];
   const filtered = existing.filter(entry => {
     if (typeof entry !== 'object' || entry === null) return true;
@@ -199,15 +211,37 @@ export const writeUserToken = (origin: string, token: string): void => {
   });
   filtered.push({ url: origin, token });
   raw.users = filtered;
+  writeRawSettings(raw);
+};
 
-  const dir = dirname(SETTINGS_PATH);
-  mkdirSync(dir, { recursive: true, mode: 0o700 });
-  chmodSync(dir, 0o700);
-  writeFileSync(SETTINGS_PATH, `${JSON.stringify(raw, null, 2)}\n`, {
-    mode: 0o600
+export const writeProjectServiceAccount = (
+  origin: string,
+  projectName: string,
+  serviceAccount: string
+): void => {
+  const raw = readRawSettings();
+  const projectNameLc = projectName.toLowerCase();
+  const existing = Array.isArray(raw.projects)
+    ? (raw.projects as unknown[])
+    : [];
+  const filtered = existing.filter(entry => {
+    if (typeof entry !== 'object' || entry === null) return true;
+    const url = (entry as { url?: unknown }).url;
+    if (typeof url !== 'string') return true;
+    try {
+      const parsed = new URL(url);
+      const existingName = parsed.pathname.split('/').filter(Boolean)[0];
+      if (!existingName) return true;
+      return !(
+        parsed.origin === origin && existingName.toLowerCase() === projectNameLc
+      );
+    } catch {
+      return true;
+    }
   });
-  chmodSync(SETTINGS_PATH, 0o600);
-  cache = undefined;
+  filtered.push({ url: `${origin}/${projectName}`, serviceAccount });
+  raw.projects = filtered;
+  writeRawSettings(raw);
 };
 
 export const settingsPath = SETTINGS_PATH;
