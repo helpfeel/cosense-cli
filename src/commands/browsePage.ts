@@ -16,9 +16,9 @@ import {
 import { resolveCredential } from '../lib/settings.ts';
 
 export const browsePageSummary =
-  '単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する';
+  '単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする';
 
-export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する
+export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する。行permalink (#<lineId>) 付きなら該当行をマークする
 
 Usage:
   cosense browsePage <pageUrl>
