@@ -31,8 +31,11 @@ Usage:
   # <title>
 
   ## メタデータ
-    タイトル / 作成日時 / 最終更新日時 / 最終アクセス日時 / 被リンク数 / pageRank /
-    views / snapshot / 行数 / 文字数 / 作成者 / 最終更新者 / 関わったユーザー
+    タイトル / pageId / commitId / 作成日時 / 最終更新日時 / 最終アクセス日時 /
+    被リンク数 / pageRank / views / snapshot / 行数 / 文字数 / 作成者 / 最終更新者 /
+    関わったユーザー
+    pageId はページの不変ID、commitId は閲覧時点の最新コミット。共同編集中に
+    ページを見失ったら、これらを browsePageChanges に渡して変更（リネーム含む）を辿れる
 
   ## 人間のアイコン記法
     本文中の [name.icon] のうち、現メンバーまたは退去済みメンバー (memberSnapshots) の
@@ -79,6 +82,8 @@ interface UserRef {
 }
 
 interface PageData {
+  id?: string;
+  commitId?: string;
   title?: string;
   persistent?: boolean;
   pageRank?: number;
@@ -155,6 +160,10 @@ const buildTelomere = (lines: PageLine[]): TelomereEntry[] => {
 const renderMetadata = (page: PageData): string => {
   const items: string[] = [];
   if (typeof page.title === 'string') items.push(`- タイトル: ${page.title}`);
+  if (typeof page.id === 'string') items.push(`- pageId: ${page.id}`);
+  if (typeof page.commitId === 'string') {
+    items.push(`- commitId: ${page.commitId}`);
+  }
   if (page.created) items.push(`- 作成日時: ${page.created}`);
   if (page.updated) items.push(`- 最終更新日時: ${page.updated}`);
   if (page.accessed) items.push(`- 最終アクセス日時: ${page.accessed}`);

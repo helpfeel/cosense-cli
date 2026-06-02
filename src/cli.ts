@@ -8,6 +8,11 @@ import {
   browsePageSummary
 } from './commands/browsePage.ts';
 import {
+  browsePageChanges,
+  browsePageChangesHelp,
+  browsePageChangesSummary
+} from './commands/browsePageChanges.ts';
+import {
   browseRelatedPages,
   browseRelatedPagesHelp,
   browseRelatedPagesSummary
@@ -102,6 +107,11 @@ const commands: Record<string, CommandSpec> = {
     handler: browsePage,
     summary: browsePageSummary,
     help: browsePageHelp
+  },
+  browsePageChanges: {
+    handler: browsePageChanges,
+    summary: browsePageChangesSummary,
+    help: browsePageChangesHelp
   },
   browseRelatedPages: {
     handler: browseRelatedPages,
