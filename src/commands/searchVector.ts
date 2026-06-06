@@ -21,8 +21,9 @@ Usage:
 
 各 Page の field:
   title           string          ページタイトル
-  image           string          サムネイル画像URL
+  image           string | null   サムネイル画像URL
   score           number          類似度スコア（高いほど近い）
+  linked          number?         被リンク数
   exists          boolean         実体のあるページなら true。false の場合は空ページ（リンク記法だけ存在）
 
   exists=true のページのみ追加で付くfield:
@@ -31,7 +32,6 @@ Usage:
     lastUpdateUser  User | null     最終更新者
     users           Array<User>     更新者リスト
     views           number          閲覧数
-    linked          number          被リンク数
     created         string          作成日時
     updated         string          更新日時
     pageRank        number          PageRank
@@ -52,7 +52,7 @@ User の field（user / lastUpdateUser / users[] で共通）:
 {
   "pages": [
     { "id": "...", "title": "vibe coding", "score": 0.833, "exists": true },
-    { "title": "bug修正", "score": 0.811, "exists": false }
+    { "title": "bug修正", "score": 0.811, "linked": 3, "exists": false }
   ]
 }
 `;
