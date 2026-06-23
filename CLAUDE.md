@@ -16,35 +16,15 @@ cosense skillやCLIはこのリポジトリ内にある方を使う
 
 コード変更後の基本フロー:
 
-1. formatterを実行
-2. linterを実行
-3. plan modeで実装した場合はbug確認
-4. ユーザーのレビューを待つ
-5. 明示的な指示があればcommit
+1. plan modeで実装した場合はbug確認
+2. formatterを実行
+3. linterを実行
+4. 必要に応じてcommit（ただしmainには直接commitしない）
+5. pushはユーザーの明示的な指示を待つ
 
 各手順の詳細は以下のセクションを参照。
 
 ## Gitの使い方
-
-### `git -C`は使用禁止
-
-gitコマンドはproject rootディレクトリから実行すること。
-
-### リポジトリ内のファイルを移動する際は`git mv`を使う
-
-```
-git mv old_path new_path
-```
-
-これによりGitでファイル履歴が保持される。
-`mv`コマンドでファイル移動すると、Gitはファイルの削除と新規作成として認識し、履歴が失われる可能性がある。
-
-### commitはユーザーの明示的な指示を待つこと
-
-依頼されたコード変更を行った後、勝手にcommitしない。
-ユーザーのレビューを待つ。
-
-「git commit」「commitして」等の明示的な指示があった場合のみ、commitする
 
 ### mainブランチにcommitしない
 
@@ -56,6 +36,10 @@ git branch --show-current
 
 `main` branchの場合はcommitせず停止し、変更内容に基づいた適切なbranch名を提案してユーザーに確認する
 
+### pushはユーザーの明示的な指示を待つ
+
+commit済みの変更をpushする前に、ユーザーの明示的な指示を待つ。
+
 ## コードのformatting・linting
 
 ### コード変更後、oxfmtを実行すること
@@ -66,7 +50,7 @@ oxfmt <changed-file>
 
 変更したファイルをformatする。個別ファイルにoxfmtを実行する方がプロジェクト全体にlintを実行するより高速。
 
-### コード変更後およびgit commit前にlintを実行すること
+### コード変更後にlintを実行すること
 
 ```
 npm run lint
