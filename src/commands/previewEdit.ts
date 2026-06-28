@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
 import { resolveUserCredential } from '../lib/settings.ts';
@@ -11,6 +12,8 @@ export const previewEditHelp = `previewEdit - ページ編集opsをdry-runして
 Usage:
   cosense previewEdit <projectUrl> <pageId> < ops.json      既存ページの編集 (stdinはops JSON)
   cosense previewEdit --new <projectUrl> < body.txt         新規ページ作成 (stdinはプレーンテキスト本文)
+  cosense previewEdit --input-file ops.json <projectUrl> <pageId>
+  cosense previewEdit --new --input-file body.txt <projectUrl>
   printf '%s' '<opsJSON>' | cosense previewEdit <projectUrl> <pageId>
   printf '%s' '<text>'    | cosense previewEdit --new <projectUrl>
 
@@ -22,6 +25,8 @@ Usage:
 オプション:
   --new   stdin をプレーンテキスト本文として受け取り、 新規ページを作る。 改行で複数行に分割され、
           1行目が page title、 2行目以降が本文として扱われる。 ops JSON を組み立てる必要は無い
+  --input-file <path>
+          stdin の代わりに UTF-8 テキストファイルから入力を読む。 指定時は stdin を読まない
 
 stdinから受け取る入力形式（既存ページ編集モード, JSON）:
   {
@@ -234,23 +239,75 @@ const readStdin = async (): Promise<string> => {
   return Buffer.concat(chunks).toString('utf8');
 };
 
+// --input-file はバイト列を読んで UTF-8 として厳格に decode する。 TextDecoder の既定は
+// ignoreBOM: false なので先頭 BOM を除去し、 fatal: true で BOM付き UTF-16 や不正バイトを
+// 例外で弾く。 ただし BOM なし UTF-16LE は各バイトが偶然 valid UTF-8 になり fatal をすり抜けて
+// NUL 混じり文字列になる事があるので、 decode 後に NUL を弾く。 stdin 経由 (readStdin の
+// toString('utf8')) は不正バイトを置換して通すが、 こちらは「文字化けしたまま書き込み成功」を
+// 防ぐため早期に失敗させる。
+const readInputFileUtf8 = async (path: string): Promise<string> => {
+  let bytes: Buffer;
+  try {
+    bytes = await readFile(path);
+  } catch (err) {
+    throw new Error(
+      `--input-file: failed to read "${path}": ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+  let text: string;
+  try {
+    text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  } catch {
+    throw new Error(
+      `--input-file: "${path}" is not valid UTF-8. Rewrite the file as UTF-8 (not UTF-16) and retry.`
+    );
+  }
+  if (text.includes('\u0000')) {
+    throw new Error(
+      `--input-file: "${path}" contains NUL, which suggests UTF-16 or binary, not UTF-8 text. Rewrite the file as UTF-8 (not UTF-16) and retry.`
+    );
+  }
+  return text;
+};
+
 interface ParsedArgs {
   isNew: boolean;
   projectUrl: string;
   pageId: string | undefined;
+  inputFile: string | undefined;
 }
 
 const parseArgs = (args: string[]): ParsedArgs => {
   const usage =
     'Usage: cosense previewEdit <projectUrl> <pageId> < ops.json (use --new <projectUrl> < body.txt for new pages)';
   let isNew = false;
+  let inputFile: string | undefined;
   const positional: string[] = [];
-  for (const arg of args) {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i] as string;
     if (arg === '--new') {
       if (isNew) {
         throw new Error(`Duplicate option: --new\n${usage}`);
       }
       isNew = true;
+    } else if (arg === '--input-file') {
+      if (inputFile !== undefined) {
+        throw new Error(`Duplicate option: --input-file\n${usage}`);
+      }
+      // 空文字を素通しすると後段の truthy 判定 (!inputFile / inputFile ? ...) で
+      // 「未指定」と同じ扱いになり、 stdin を読んでしまう。 値欠落として弾く
+      const value = args[++i];
+      if (value === undefined || value === '') {
+        throw new Error(`Missing value for --input-file\n${usage}`);
+      }
+      // 次トークンが別オプション (--new 等) の時はパスの書き忘れとみなし、 黙って
+      // ファイル名として消費しない。 `--` 始まりの実ファイルは ./--name で渡せる
+      if (value.startsWith('--')) {
+        throw new Error(
+          `--input-file expects a file path, but got "${value}". A path must immediately follow --input-file.\n${usage}`
+        );
+      }
+      inputFile = value;
     } else if (arg.startsWith('--')) {
       throw new Error(`Unknown option: ${arg}\n${usage}`);
     } else {
@@ -263,7 +320,12 @@ const parseArgs = (args: string[]): ParsedArgs => {
         'Usage: cosense previewEdit --new <projectUrl> < body.txt'
       );
     }
-    return { isNew, projectUrl: positional[0] as string, pageId: undefined };
+    return {
+      isNew,
+      projectUrl: positional[0] as string,
+      pageId: undefined,
+      inputFile
+    };
   }
   if (positional.length !== 2) {
     throw new Error(usage);
@@ -271,28 +333,32 @@ const parseArgs = (args: string[]): ParsedArgs => {
   return {
     isNew,
     projectUrl: positional[0] as string,
-    pageId: positional[1] as string
+    pageId: positional[1] as string,
+    inputFile
   };
 };
 
 export const previewEdit = async (args: string[]): Promise<void> => {
-  const { isNew, projectUrl, pageId } = parseArgs(args);
+  const { isNew, projectUrl, pageId, inputFile } = parseArgs(args);
 
-  if (process.stdin.isTTY) {
+  if (!inputFile && process.stdin.isTTY) {
     throw new Error(
       isNew
-        ? 'previewEdit --new reads plain text body from stdin. Pipe it in, e.g. `printf "Title\\nbody\\n" | cosense previewEdit --new <projectUrl>`.'
-        : 'previewEdit reads ops JSON from stdin. Pipe it in, e.g. `cosense previewEdit <projectUrl> <pageId> < ops.json`.'
+        ? 'previewEdit --new reads plain text body from stdin or --input-file. Pipe it in, e.g. `printf "Title\\nbody\\n" | cosense previewEdit --new <projectUrl>`, or pass a UTF-8 file with `--input-file body.txt`.'
+        : 'previewEdit reads ops JSON from stdin or --input-file. Pipe it in, e.g. `cosense previewEdit <projectUrl> <pageId> < ops.json`, or pass a UTF-8 file with `--input-file ops.json`.'
     );
   }
 
   const { origin, projectName } = parseProjectUrlStrict(projectUrl);
-  const stdinRaw = await readStdin();
-  if (!stdinRaw.trim()) {
+  const rawInput = inputFile
+    ? await readInputFileUtf8(inputFile)
+    : await readStdin();
+  if (!rawInput.trim()) {
+    const source = inputFile ? `input file "${inputFile}"` : 'stdin';
     throw new Error(
       isNew
-        ? 'stdin is empty. Pipe page body (plain text) to stdin.'
-        : 'stdin is empty. Pipe ops JSON to stdin.'
+        ? `${source} is empty. Provide page body (plain text).`
+        : `${source} is empty. Provide ops JSON.`
     );
   }
 
@@ -302,15 +368,16 @@ export const previewEdit = async (args: string[]): Promise<void> => {
   // 慣習で末尾の単一改行 (LF または CRLF) だけ取り除く
   let ops: unknown;
   if (isNew) {
-    const body = stdinRaw.replace(/\r?\n$/, '');
+    const body = rawInput.replace(/\r?\n$/, '');
     ops = [{ insertBefore: '_end', text: body }];
   } else {
     let parsed: unknown;
     try {
-      parsed = JSON.parse(stdinRaw);
+      parsed = JSON.parse(rawInput);
     } catch (err) {
+      const source = inputFile ? `input file "${inputFile}"` : 'stdin';
       throw new Error(
-        `stdin is not valid JSON: ${err instanceof Error ? err.message : String(err)}`
+        `${source} is not valid JSON: ${err instanceof Error ? err.message : String(err)}`
       );
     }
     ops = (parsed as { ops?: unknown }).ops;

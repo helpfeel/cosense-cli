@@ -30,6 +30,11 @@ ops の組み立てwisdom:
 - 特定行を複数行に分割したい時は、対象 lineId の直前に複数行を `insertBefore` してから対象行を `delete` する。 逆順にすると anchor 不在で失敗する
 - ページ末尾に追記したい時は、 anchor に `_end` を指定する
 
+#### Windowsで書き込む時
+
+Windows 環境では本文や ops JSON を UTF-8 ファイルに書き、`previewEdit --input-file <path>` で渡す。
+PowerShell の pipe 経由だと日本語が `?` に化けるため。
+
 ### 手順3: 出力を読んで適用後の page を確認する
 
 意図通りの変更になっているかを確認する。意図と違えば ops を組み直して手順2からやり直す。
