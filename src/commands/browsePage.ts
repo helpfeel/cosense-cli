@@ -16,9 +16,9 @@ import {
 import { resolveCredential } from '../lib/settings.ts';
 
 export const browsePageSummary =
-  '単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする';
+  '単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする';
 
-export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+本文をAIが読みやすい形式で出力する。行permalink (#<lineId>) 付きなら該当行をマークする
+export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+本文をAIが読みやすい形式で出力する。行permalink (#<lineId>) 付きなら該当行をマークする
 
 Usage:
   cosense browsePage <pageUrl>
@@ -46,6 +46,12 @@ Usage:
     lines[] を最終更新者でグルーピングし、 displayName  更新期間 YYYY/M/D 〜 YYYY/M/D  N行更新
     の形式で行数降順に全員出力
 
+  ## Infobox
+    このページ本文から抜き出された Infobox を出力する。各 Infobox を ### <title> の
+    見出しと  - キー: 値  の箇条書きで表す。値はCosense記法のまま。
+    hallucination または truncated と判定された Infobox は除外する。
+    0件の場合はセクションごと省略
+
   ## 本文
     各行の text を改行で結合。fragment 指定行のみ末尾に  #<lineId>  を付与
 
@@ -56,7 +62,7 @@ Usage:
     このページの 1-hop 近傍ページタイトル一覧。 1-hop が 0 件なら区切り線ごと省略
 
 persistent: false の時:
-  メタデータ・アイコン・テロメアは省略。 (このページはまだ作成されていません) と
+  メタデータ・アイコン・テロメア・Infoboxは省略。 (このページはまだ作成されていません) と
   本文（テンプレート）と Related Pages を出力する
 
 URLに #<lineId> fragmentが指定された時:
@@ -81,6 +87,13 @@ interface UserRef {
   displayName?: string;
 }
 
+interface InfoboxResult {
+  title?: string;
+  infobox?: Record<string, string>;
+  hallucination?: boolean;
+  truncated?: boolean;
+}
+
 interface PageData {
   id?: string;
   commitId?: string;
@@ -102,6 +115,7 @@ interface PageData {
   users?: UserRef[];
   lines?: PageLine[];
   icons?: string[];
+  infoboxResult?: InfoboxResult[];
 }
 
 const LINE_ID_PATTERN = /^[0-9a-f]{24}$/;
@@ -224,6 +238,23 @@ const renderTelomere = (
   return `## テロメアのサマリー\n\n${lines.join('\n')}`;
 };
 
+const renderInfobox = (results: InfoboxResult[] | undefined): string | null => {
+  if (!results) return null;
+  const blocks: string[] = [];
+  for (const result of results) {
+    // hallucination=AI補完の不確実値、truncated=抽出失敗で値が不完全。どちらも
+    // 信頼できないので丸ごと除外する
+    if (result.hallucination || result.truncated) continue;
+    const rows = Object.entries(result.infobox ?? {}).map(
+      ([key, value]) => `- ${key}: ${value}`
+    );
+    if (rows.length === 0) continue;
+    blocks.push(`### ${result.title ?? ''}\n\n${rows.join('\n')}`);
+  }
+  if (blocks.length === 0) return null;
+  return `## Infobox\n\n${blocks.join('\n\n')}`;
+};
+
 interface BodyRender {
   body: string;
   matchedFragment: boolean;
@@ -323,6 +354,9 @@ export const browsePage = async (args: string[]): Promise<void> => {
 
   const telomereSection = renderTelomere(telomere, userMap);
   if (telomereSection) sections.push(telomereSection);
+
+  const infoboxSection = renderInfobox(page.infoboxResult);
+  if (infoboxSection) sections.push(infoboxSection);
 
   sections.push(`## 本文\n\n${body}`);
 
