@@ -1,7 +1,7 @@
 import { encodeTitleForUrl } from '../lib/encodeTitle.ts';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { resolveUserCredential } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const submitEditSummary =
   'previewEditで取得したpreviewIdを使ってページ編集を確定する';
@@ -26,7 +26,7 @@ Usage:
 HTTPエラー:
   HTTP 400  preview を生成した時と違う project の URL を渡している
   HTTP 401  認証なし
-  HTTP 403  非memberまたはService Account（書き込みはPAT限定）
+  HTTP 403  権限不足（PAT利用時、projectのmemberでない 等）
   HTTP 404  preview が見つからない / 期限切れ (5分) / 既にconsume済み / 他userのpreview
   HTTP 409 {"error":"NotFastForward","latest":...}
             preview生成後にページが更新された。最新stateを再取得して ops を作り直し、
@@ -50,8 +50,8 @@ export const submitEdit = async (args: string[]): Promise<void> => {
 
   const { origin, projectName } = parseProjectUrlStrict(projectUrl);
   const apiUrl = `${origin}/api/pages/v2/${projectName}/page-edit-for-ai/submit`;
-  // 書き込み系 API は PAT 限定 (Service Account 拒否) なので、PAT を直接解決する
-  const credential = resolveUserCredential(origin);
+  // projectに紐づくService Accountがあればそれを、無ければPATを使う（読み取りと同じ）
+  const credential = resolveCredential(origin, projectName);
   const response = (await requestJson(apiUrl, {
     credential,
     method: 'POST',

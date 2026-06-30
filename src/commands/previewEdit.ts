@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { resolveUserCredential } from '../lib/settings.ts';
+import { resolveCredential } from '../lib/settings.ts';
 
 export const previewEditSummary =
   'ページ編集opsをdry-runしてpreviewIdを取得する';
@@ -56,7 +56,7 @@ stdinから受け取る入力形式（既存ページ編集モード, JSON）:
 
 HTTPエラー:
   HTTP 401  認証なし
-  HTTP 403  非memberまたはService Account（書き込みはPAT限定）
+  HTTP 403  権限不足（PAT利用時、projectのmemberでない 等）
   HTTP 404  pageId に対応するpageが存在しない / pageId が不正な形式
   HTTP 409 {"error":"NotFastForward","latest":...}
             preview生成後にページが更新された。最新stateを再取得して ops を作り直す必要がある
@@ -384,8 +384,8 @@ export const previewEdit = async (args: string[]): Promise<void> => {
   }
   const { changes, newLineIds, updatedLineIds } = translateOps(ops);
 
-  // 書き込み系 API は PAT 限定 (Service Account 拒否) なので、PAT を直接解決する
-  const credential = resolveUserCredential(origin);
+  // projectに紐づくService Accountがあればそれを、無ければPATを使う（読み取りと同じ）
+  const credential = resolveCredential(origin, projectName);
 
   const apiUrl = `${origin}/api/pages/v2/${projectName}/page-edit-for-ai/preview`;
   const requestBody = pageId ? { pageId, changes } : { changes };
