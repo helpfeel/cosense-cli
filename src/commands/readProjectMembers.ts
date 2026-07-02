@@ -14,8 +14,10 @@ Usage:
   <projectUrl>  プロジェクトのURL（例: https://scrapbox.io/shokai）
 
 戻り値（top-levelの主なkey）:
-  users           Array<User>          現メンバー一覧
-  memberSnapshots Array<Snapshot>?     退去済みメンバーの記録
+  users                   Array<User>            現メンバー一覧
+  memberSnapshots         Array<Snapshot>?       退去済みメンバーの記録
+  serviceAccounts         Array<ServiceAccount>? Service Account一覧
+  serviceAccountSnapshots Array<ServiceAccount>? 削除済みService Accountの記録
 
 User の field:
   id           string    Cosense内部のID
@@ -33,6 +35,10 @@ Snapshot の field:
   created string                            退去者snapshot作成時刻
   updated string                            退去者snapshot更新時刻
   data    { id, name?, displayName?, email? } 退去時のユーザー情報
+
+ServiceAccount の field:
+  id     string   Service AccountのID（このIDでページ・行の著者を同定できる）
+  usage  string   用途ラベル（著者の表示名として使う）
 
 戻り値のJSON抜粋例:
 {
@@ -60,6 +66,12 @@ Snapshot の field:
         "email": "former@example.com"
       }
     }
+  ],
+  "serviceAccounts": [
+    { "id": "6a44...", "usage": "CLI test" }
+  ],
+  "serviceAccountSnapshots": [
+    { "id": "6a1a...", "usage": "Cosense CLI" }
   ]
 }
 `;

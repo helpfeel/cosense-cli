@@ -11,6 +11,7 @@ import { requestJson } from '../lib/request.ts';
 import {
   enrichPageUsers,
   fetchUserMap,
+  serviceAccountSuffix,
   type UserMap
 } from '../lib/resolveUsers.ts';
 import { resolveCredential } from '../lib/settings.ts';
@@ -85,6 +86,8 @@ interface UserRef {
   id?: string;
   name?: string;
   displayName?: string;
+  isServiceAccount?: boolean;
+  isServiceAccountDeleted?: boolean;
 }
 
 interface InfoboxResult {
@@ -129,8 +132,12 @@ const extractFragment = (input: string): string | null => {
 
 const formatUserDisplay = (u: UserRef | null | undefined): string | null => {
   if (!u) return null;
-  if (u.displayName && u.name) return `${u.displayName} (${u.name})`;
-  return u.displayName ?? u.name ?? u.id ?? null;
+  const base =
+    u.displayName && u.name
+      ? `${u.displayName} (${u.name})`
+      : (u.displayName ?? u.name ?? u.id ?? null);
+  if (base === null) return null;
+  return `${base}${serviceAccountSuffix(u)}`;
 };
 
 const formatDateYMD = (unixSec: number): string => {
@@ -232,7 +239,8 @@ const renderTelomere = (
   if (entries.length === 0) return null;
   const lines = entries.map(e => {
     const info = userMap.get(e.userId);
-    const name = info?.displayName ?? info?.name ?? e.userId;
+    const base = info?.displayName ?? info?.name ?? e.userId;
+    const name = info ? `${base}${serviceAccountSuffix(info)}` : base;
     return `- ${name}\t更新期間 ${formatDateYMD(e.minUpdated)} 〜 ${formatDateYMD(e.maxUpdated)}\t${e.lineCount}行更新`;
   });
   return `## テロメアのサマリー\n\n${lines.join('\n')}`;

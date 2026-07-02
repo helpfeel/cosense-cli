@@ -2,7 +2,11 @@ import { encodeTitleForUrl } from '../lib/encodeTitle.ts';
 import { formatTimestamp } from '../lib/formatTimestamp.ts';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
-import { fetchUserMap, type UserMap } from '../lib/resolveUsers.ts';
+import {
+  fetchUserMap,
+  serviceAccountSuffix,
+  type UserMap
+} from '../lib/resolveUsers.ts';
 import { resolveCredential } from '../lib/settings.ts';
 
 export const browsePageChangesSummary =
@@ -102,7 +106,9 @@ const resolveUserName = (
 ): string => {
   if (!userId) return '不明なユーザー';
   const info = userMap.get(userId);
-  return info?.displayName ?? info?.name ?? userId;
+  if (!info) return userId;
+  const base = info.displayName ?? info.name ?? userId;
+  return `${base}${serviceAccountSuffix(info)}`;
 };
 
 const quote = (text: string | undefined): string => `「${text ?? ''}」`;

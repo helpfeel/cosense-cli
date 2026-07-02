@@ -5,6 +5,8 @@ interface UserInfo {
   name?: string;
   displayName?: string;
   email?: string;
+  isServiceAccount?: boolean;
+  isServiceAccountDeleted?: boolean;
 }
 
 export type UserMap = Map<string, UserInfo>;
@@ -20,15 +22,34 @@ interface MemberSnapshotEntry {
   data?: UserEntry;
 }
 
+interface ServiceAccountEntry {
+  id?: unknown;
+  usage?: unknown;
+}
+
 interface UsersResponse {
   users?: UserEntry[];
   memberSnapshots?: MemberSnapshotEntry[];
+  serviceAccounts?: ServiceAccountEntry[];
+  serviceAccountSnapshots?: ServiceAccountEntry[];
 }
 
 const cache = new Map<string, UserMap>();
 
 const stringOrUndefined = (value: unknown): string | undefined =>
   typeof value === 'string' && value !== '' ? value : undefined;
+
+// Service Account著者の表示名末尾に付ける注記。名前を文字列整形するコマンド
+// (browsePage / browsePageChanges) で共用し、usageが人間名に見えるのを防ぐ
+export const serviceAccountSuffix = (info: {
+  isServiceAccount?: boolean;
+  isServiceAccountDeleted?: boolean;
+}): string => {
+  if (!info.isServiceAccount) return '';
+  return info.isServiceAccountDeleted
+    ? ' (deleted service account)'
+    : ' (service account)';
+};
 
 const buildUserInfo = (entry: UserEntry): UserInfo => {
   const info: UserInfo = {};
@@ -65,6 +86,23 @@ export const fetchUserMap = async (
     const id = stringOrUndefined(entry.id);
     if (!id || map.has(id)) continue;
     map.set(id, buildUserInfo(entry));
+  }
+  for (const entry of data.serviceAccounts ?? []) {
+    const id = stringOrUndefined(entry.id);
+    if (!id || map.has(id)) continue;
+    map.set(id, {
+      displayName: stringOrUndefined(entry.usage),
+      isServiceAccount: true
+    });
+  }
+  for (const entry of data.serviceAccountSnapshots ?? []) {
+    const id = stringOrUndefined(entry.id);
+    if (!id || map.has(id)) continue;
+    map.set(id, {
+      displayName: stringOrUndefined(entry.usage),
+      isServiceAccount: true,
+      isServiceAccountDeleted: true
+    });
   }
 
   cache.set(cacheKey, map);
