@@ -20,7 +20,7 @@ Usage:
   --sort <pageRank|updated>  並び順（既定はpageRank）
 
 例:
-  cosense searchFullText https://scrapbox.io/shokai/ "カレー うどん ラーメン" --or
+  cosense searchFullText https://scrapbox.io/shokai/ "デザイン 設計 design UI UX プロトタイプ" --or
 
 戻り値（top-levelの主なkey）:
   projectName            string         プロジェクト名
