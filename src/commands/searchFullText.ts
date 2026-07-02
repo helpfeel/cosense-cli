@@ -9,11 +9,18 @@ export const searchFullTextSummary = '本文全文を対象に検索する';
 export const searchFullTextHelp = `searchFullText - 本文全文を対象に検索する
 
 Usage:
-  cosense searchFullText <projectUrl> <query>
+  cosense searchFullText <projectUrl> <query> [--or] [--sort <pageRank|updated>]
 
 引数:
   <projectUrl>  プロジェクトのURL（例: https://scrapbox.io/shokai/）
   <query>       検索クエリ
+
+オプション:
+  --or                       複数語のいずれかにマッチするページを返す（既定はAND）
+  --sort <pageRank|updated>  並び順（既定はpageRank）
+
+例:
+  cosense searchFullText https://scrapbox.io/shokai/ "カレー うどん ラーメン" --or
 
 戻り値（top-levelの主なkey）:
   projectName            string         プロジェクト名
@@ -63,13 +70,56 @@ interface SearchFullTextData {
   }[];
 }
 
-export const searchFullText = async (args: string[]): Promise<void> => {
-  const [url, query] = args;
-  if (!url || !query) {
-    throw new Error('Usage: cosense searchFullText <projectUrl> <query>');
+interface ParsedArgs {
+  projectUrl: string;
+  query: string;
+  or: boolean;
+  sort?: string;
+}
+
+const parseArgs = (args: string[]): ParsedArgs => {
+  const usage =
+    'Usage: cosense searchFullText <projectUrl> <query> [--or] [--sort <pageRank|updated>]';
+  let or = false;
+  let sort: string | undefined;
+  const positional: string[] = [];
+  for (let i = 0; i < args.length; i += 1) {
+    const arg = args[i] as string;
+    if (arg === '--or') {
+      or = true;
+    } else if (arg === '--sort') {
+      const value = args[i + 1];
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error(`--sort requires a value\n${usage}`);
+      }
+      if (value !== 'pageRank' && value !== 'updated') {
+        throw new Error(`--sort must be pageRank or updated\n${usage}`);
+      }
+      sort = value;
+      i += 1;
+    } else if (arg.startsWith('--')) {
+      throw new Error(`Unknown option: ${arg}\n${usage}`);
+    } else {
+      positional.push(arg);
+    }
   }
-  const { origin, projectName } = parseProjectUrl(url);
-  const apiUrl = `${origin}/api/pages/${projectName}/search/query?q=${encodeURIComponent(query)}`;
+  if (positional.length !== 2 || !positional[1]) {
+    throw new Error(usage);
+  }
+  return {
+    projectUrl: positional[0] as string,
+    query: positional[1] as string,
+    or,
+    sort
+  };
+};
+
+export const searchFullText = async (args: string[]): Promise<void> => {
+  const { projectUrl, query, or, sort } = parseArgs(args);
+  const { origin, projectName } = parseProjectUrl(projectUrl);
+  let apiUrl = `${origin}/api/pages/${projectName}/search/query?q=${encodeURIComponent(query)}`;
+  if (or) apiUrl += '&op=or';
+  if (sort) apiUrl += `&sort=${sort}`;
   const credential = resolveCredential(origin, projectName);
   const data = (await requestJson(apiUrl, {
     credential

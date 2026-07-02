@@ -41,10 +41,12 @@ const computeRelation = (
 
 export const fetchRelatedPagesWithRelations = async (
   url: string,
-  query?: string
+  query?: string,
+  or?: boolean
 ): Promise<RelatedPagesData> => {
   const { origin, projectName, encodedTitle } = parsePageUrl(url);
-  const queryParam = query ? `?search=${encodeURIComponent(query)}` : '';
+  let queryParam = query ? `?search=${encodeURIComponent(query)}` : '';
+  if (or) queryParam += queryParam ? '&op=or' : '?op=or';
   const startPageUrl = `${origin}/api/pages/v2/${projectName}/${encodedTitle}`;
   const relatedUrl = `${startPageUrl}/links1hop${queryParam}`;
   const credential = resolveCredential(origin, projectName);
