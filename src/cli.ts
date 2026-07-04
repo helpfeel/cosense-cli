@@ -18,6 +18,11 @@ import {
   browseRelatedPagesSummary
 } from './commands/browseRelatedPages.ts';
 import {
+  downloadFile,
+  downloadFileHelp,
+  downloadFileSummary
+} from './commands/downloadFile.ts';
+import {
   list1hopLinks,
   list1hopLinksHelp,
   list1hopLinksSummary
@@ -43,6 +48,11 @@ import {
   previewEditHelp,
   previewEditSummary
 } from './commands/previewEdit.ts';
+import {
+  readFileInfo,
+  readFileInfoHelp,
+  readFileInfoSummary
+} from './commands/readFileInfo.ts';
 import {
   readPage,
   readPageHelp,
@@ -119,6 +129,16 @@ const commands: Record<string, CommandSpec> = {
     help: browseRelatedPagesHelp
   },
   readPage: { handler: readPage, summary: readPageSummary, help: readPageHelp },
+  readFileInfo: {
+    handler: readFileInfo,
+    summary: readFileInfoSummary,
+    help: readFileInfoHelp
+  },
+  downloadFile: {
+    handler: downloadFile,
+    summary: downloadFileSummary,
+    help: downloadFileHelp
+  },
   readProjectMembers: {
     handler: readProjectMembers,
     summary: readProjectMembersSummary,

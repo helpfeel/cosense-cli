@@ -45,6 +45,30 @@ export const parseProjectUrlStrict = (input: string): ProjectUrl => {
   return { origin: u.origin, projectName: m[1] as string };
 };
 
+export interface FileUrl {
+  origin: string;
+  fileId: string;
+}
+
+export const parseFileUrl = (input: string): FileUrl => {
+  const u = new URL(input);
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+    throw new Error(`File URL must use http: or https: scheme: ${input}`);
+  }
+  if (u.search || u.hash) {
+    throw new Error(
+      `File URL must not have query/hash (use --thumbnail to fetch thumbnail), got: ${input}`
+    );
+  }
+  const m = u.pathname.match(/^\/files\/([0-9a-f]{24})(?:\..*)?$/);
+  if (!m) {
+    throw new Error(
+      `File URL must be https://<host>/files/<fileId>[.<ext>], got: ${input}`
+    );
+  }
+  return { origin: u.origin, fileId: m[1] as string };
+};
+
 export const parsePageUrl = (input: string): PageUrl => {
   const u = new URL(input);
   const m = u.pathname.match(/^\/([^/]+)\/(.+?)\/?$/);

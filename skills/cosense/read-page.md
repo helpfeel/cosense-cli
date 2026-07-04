@@ -113,6 +113,21 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 - `descriptions` を眺めて、ユーザーの問いに関連するもの・注目度の高いものを `browsePage` で読む
 - 全件読む必要はない。意図理解に必要な範囲で AI が判断する
 
+## 本文中の画像・ファイルを読む
+
+本文中の `/files/<fileId>.<ext>` 形式のURLは、projectにアップロードされたファイル（画像・PDF等）である。中身がユーザーの問いへの回答に必要な時だけ読む。
+
+- ダウンロード前に `readFileInfo` を確認する。`text` だけでユーザーの問いに足りるなら、ダウンロードもsubagentも省ける
+- `downloadFile` で一時ディレクトリ（scratchpad等）に保存する。画像は `--thumbnail` で取得すれば読むには十分な事が多い
+
+### 保存したファイルは原則subagentに読ませる
+
+メインのagentが画像を直接Readすると、画像tokenがcontextに載ったまま以降の作業を圧迫する。保存したファイルのパスをsubagentに渡して読ませ、メイン側は報告テキストだけを受け取る。
+
+- 概要把握（何が写っているか）なら、軽量モデル（Haiku等）のsubagentで足りる
+- 画像内のテキストを正確に引用したり、検証の根拠に使う時は、高解像度入力に対応したモデル（Sonnet以上）のsubagentで読む
+- メインのagentが直接Readするのは、その画像についてユーザーと対話を続ける等、画像そのものを手元に置く必要がある場合に限る
+
 ## 変更を追う
 
 共同編集中は、控えておいた pageId と commitId を `browsePageChanges` に渡すと、最後に読んだ後に共同編集者が何を変えたかを辿れる。pageId（ページの不変ID）と commitId（閲覧時点の最新コミット）は、`browsePage` 出力ではこの名前で、`readPage` の JSON では top-level の `id` / `commitId` として得られる。
