@@ -1,3 +1,10 @@
+import { createWriteStream } from 'node:fs';
+import { rename, rm, stat } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import type { Credential } from './settings.ts';
+
 export class HttpError extends Error {
   readonly status: number;
   readonly statusText: string;
@@ -30,13 +37,6 @@ export class HttpError extends Error {
     this.body = params.body;
   }
 }
-
-import { createWriteStream } from 'node:fs';
-import { rename, rm, stat } from 'node:fs/promises';
-import { basename, dirname, join, resolve } from 'node:path';
-import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import type { Credential } from './settings.ts';
 
 interface RequestOptions {
   credential?: Credential;
