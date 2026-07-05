@@ -40,7 +40,7 @@ export const buildGroups = (pages: Page[]): Group[] => {
   return groups;
 };
 
-const toTitleLc = (title: string): string =>
+export const toTitleLc = (title: string): string =>
   title.replace(/ /g, '_').toLowerCase();
 
 export const dedupAndSortByPageRank = (

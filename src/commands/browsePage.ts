@@ -1,4 +1,5 @@
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
+import { renderLiterateDatabase } from '../lib/literateDatabase.ts';
 import { parsePageUrl } from '../lib/parseUrl.ts';
 import { fetchRelatedPages } from '../lib/relatedPages.ts';
 import {
@@ -60,7 +61,11 @@ Usage:
     本文と関連ページ一覧の境界を示す非Markdown区切り線。Cosenseの#hashtag記法と
     衝突しないようにMarkdown見出しを避ける。
   ## 1 hop link
-    このページの 1-hop 近傍ページタイトル一覧。 1-hop が 0 件なら区切り線ごと省略
+    このページの 1-hop 近傍ページタイトル一覧。 0 件なら区切り線ごと省略。
+    このページがinfobox定義ページ（本文に table:infobox または table:cosense を宣言している）の
+    時は ## 1 hop link（Infoboxの文芸的データベース、TSV形式のテーブル） に変わる。表の構造は
+    cosense browseRelatedPages --help を参照。表に載らなかったページは
+    ## 1 hop link（表に載っていないページ） に出力する
 
 persistent: false の時:
   メタデータ・アイコン・テロメア・Infoboxは省略。 (このページはまだ作成されていません) と
@@ -119,6 +124,7 @@ interface PageData {
   lines?: PageLine[];
   icons?: string[];
   infoboxResult?: InfoboxResult[];
+  infoboxDefinition?: string[];
 }
 
 const LINE_ID_PATTERN = /^[0-9a-f]{24}$/;
@@ -283,11 +289,26 @@ const renderBody = (lines: PageLine[], fragment: string | null): BodyRender => {
   return { body: out.join('\n'), matchedFragment };
 };
 
-const renderRelatedPages = (hopValue: unknown): string | null => {
+const renderRelatedPages = (
+  hopValue: unknown,
+  page: PageData
+): string | null => {
+  const sections: string[] = [];
+  // seen は文芸的データベースと 1 hop link で共有して、表に載ったページを再掲しないようにする
+  const seen = new Set<string>();
+  const literateDatabase = renderLiterateDatabase(page, hopValue, seen);
+  if (literateDatabase) sections.push(literateDatabase);
+
   const links1hop = (hopValue as { links1hop?: RelatedPage[] }).links1hop;
-  const pages = dedupAndSortByPageRank(links1hop);
-  if (pages.length === 0) return null;
-  return `-------------------- Related Pages --------------------\n\n## 1 hop link\n\n${renderGroups(buildGroups(pages))}`;
+  const pages = dedupAndSortByPageRank(links1hop, seen);
+  if (pages.length > 0) {
+    const heading = literateDatabase
+      ? '## 1 hop link（表に載っていないページ）'
+      : '## 1 hop link';
+    sections.push(`${heading}\n\n${renderGroups(buildGroups(pages))}`);
+  }
+  if (sections.length === 0) return null;
+  return `-------------------- Related Pages --------------------\n\n${sections.join('\n\n')}`;
 };
 
 export const browsePage = async (args: string[]): Promise<void> => {
@@ -317,7 +338,7 @@ export const browsePage = async (args: string[]): Promise<void> => {
     sections.push('(このページはまだ作成されていません)');
     const { body } = renderBody(page.lines ?? [], null);
     sections.push(`## 本文（テンプレート）\n\n${body}`);
-    const related = renderRelatedPages(hopValue);
+    const related = renderRelatedPages(hopValue, page);
     if (related) sections.push(related);
     process.stdout.write(`${sections.join('\n\n')}\n`);
     return;
@@ -368,7 +389,7 @@ export const browsePage = async (args: string[]): Promise<void> => {
 
   sections.push(`## 本文\n\n${body}`);
 
-  const related = renderRelatedPages(hopValue);
+  const related = renderRelatedPages(hopValue, page);
   if (related) sections.push(related);
 
   process.stdout.write(`${sections.join('\n\n')}\n`);
