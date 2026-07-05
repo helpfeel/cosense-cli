@@ -9,7 +9,7 @@
       "name": "cosense-cli",
       "source": "./",
       "description": "Cosenseのページを読み・調べ・編集するAgent Skill",
-      "version": "1.8.0",
+      "version": "1.9.0",
       "author": {
         "name": "Helpfeel Inc."
       },
