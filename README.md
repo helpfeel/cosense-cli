@@ -6,6 +6,8 @@ Cosenseのページを読み・調べ・編集するAgent SkillとCLI
 
 ### for Claude Code
 
+Claude Codeを起動し、インストールコマンドを実行する
+
 ```
 /plugin marketplace add helpfeel/cosense-cli
 ```
@@ -14,10 +16,20 @@ Cosenseのページを読み・調べ・編集するAgent SkillとCLI
 /plugin install cosense-cli@cosense-cli
 ```
 
+Claude CodeはSkillの自動更新が設定可能です。 `/plugins` からMarketplaceを選択し、有効化してください。
+
 ### for Codex
 
+Codexに入らず、ターミナルでインストールコマンドを実行する
+
 ```
-$skill-installer https://github.com/helpfeel/cosense-cli
+npx skills install helpfeel/cosense-cli --agent codex
+```
+
+CodexはSkillの自動更新ができません。手動更新してください。
+
+```
+npx skills update cosense
 ```
 
 ## Install CLI
