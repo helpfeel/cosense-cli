@@ -1,4 +1,5 @@
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
+import { applyFileMarkup, fetchFileMarkups } from '../lib/fileMarkup.ts';
 import { renderLiterateDatabase } from '../lib/literateDatabase.ts';
 import { parsePageUrl } from '../lib/parseUrl.ts';
 import { fetchRelatedPages } from '../lib/relatedPages.ts';
@@ -55,7 +56,28 @@ Usage:
     0件の場合はセクションごと省略
 
   ## 本文
-    各行の text を改行で結合。fragment 指定行のみ末尾に  #<lineId>  を付与
+    各行の text を改行で結合。fragment 指定行のみ末尾に  #<lineId>  を付与。
+    本文中の、ページと同じhostのアップロードファイルURL (https://<host>/files/<fileId>[.<ext>])
+    は、囲むbracketごと1行の <cosense:file> タグに展開する。
+      type          string?  ファイルのContent-Type
+      url           string   元のファイルURL
+      originalname  string?  アップロード時のファイル名
+      size          number?  ファイルのbyte数
+      description   string?  ファイルから抽出されたテキスト（画像のOCR、PDFの本文等）。
+                             先頭2000文字まで、超えた分は … に切り詰める。
+                             改行・"・バックスラッシュは \\n \\" \\\\ にエスケープ
+    本文中のGyazo URL (https://gyazo.com/<hash> とその変種) も同様に
+    <cosense:gyazo> タグに展開する。
+      type       string   photo または video
+      url        string   元のGyazo URL
+      thumbnail  string   curl等で直接取得できるプレビュー画像URL。photoは縮小版、
+                          videoは動画から切り出された静止ポスター
+      image      string?  photoの原寸画像URL
+      width      number?  原寸の横px
+      height     number?  原寸の縦px
+      title      string?  Gyazoに設定されたタイトル
+    ファイル・Gyazoの情報を取得できなかった時（非公開・削除済み等）や、別host・query/hash
+    付きのURLはタグ化されず、そのまま残る
 
   -------------------- Related Pages --------------------
     本文と関連ページ一覧の境界を示す非Markdown区切り線。Cosenseの#hashtag記法と
@@ -274,11 +296,15 @@ interface BodyRender {
   matchedFragment: boolean;
 }
 
-const renderBody = (lines: PageLine[], fragment: string | null): BodyRender => {
+const renderBody = (
+  lines: PageLine[],
+  fragment: string | null,
+  fileMarkups: Map<string, string>
+): BodyRender => {
   let matchedFragment = false;
   const out: string[] = [];
   for (const line of lines) {
-    const text = normalizeIndent(line.text ?? '');
+    const text = applyFileMarkup(normalizeIndent(line.text ?? ''), fileMarkups);
     if (fragment && line.id === fragment) {
       matchedFragment = true;
       out.push(`${text}\t#${line.id}`);
@@ -336,7 +362,7 @@ export const browsePage = async (args: string[]): Promise<void> => {
 
   if (!persistent) {
     sections.push('(このページはまだ作成されていません)');
-    const { body } = renderBody(page.lines ?? [], null);
+    const { body } = renderBody(page.lines ?? [], null, new Map());
     sections.push(`## 本文（テンプレート）\n\n${body}`);
     const related = renderRelatedPages(hopValue, page);
     if (related) sections.push(related);
@@ -344,11 +370,18 @@ export const browsePage = async (args: string[]): Promise<void> => {
     return;
   }
 
+  const fileMarkups = await fetchFileMarkups(
+    (page.lines ?? []).map(line => line.text ?? ''),
+    origin,
+    credential
+  );
+
   // 本文を先にrenderしてfragment一致状況を取得し、タイトル直後の説明文に反映する
   const validFragment = fragment !== null && LINE_ID_PATTERN.test(fragment);
   const { body, matchedFragment } = renderBody(
     page.lines ?? [],
-    validFragment ? fragment : null
+    validFragment ? fragment : null,
+    fileMarkups
   );
   if (fragment !== null) {
     if (!validFragment) {

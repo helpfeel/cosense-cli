@@ -86,7 +86,7 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 
 ### 「指定されたページのみ読む」を選んだ場合
 
-起点ページ群を `browsePage` で読み終えたら終了する。他のページは辿らない。
+起点ページ群を `browsePage` で読み終えたら終了する。他のページは辿らない。この制限の対象は他のページであり、本文中の画像・ファイル・動画ポスターはこのページの構成要素なので対象外。
 
 `browsePage` 出力末尾の関連タイトル一覧は文脈の手がかりとして使ってよいが、未閲覧ページの本文内容は推測して断定しない。タイトルから読み取れる範囲のみを根拠にする。
 
@@ -121,27 +121,12 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 - セルの値はInfoboxがAIで抜き出したもの。正確な値の引用や検証には、行のページ本文を `browsePage` で読む
 - ソート・フィルタ・集計はTSVを自分で処理する
 
-## 本文中の画像・ファイルを読む
+## Gyazoの画像・動画を読む
 
-本文中の `/files/<fileId>.<ext>` 形式のURLは、projectにアップロードされたファイル（画像・PDF等）である。中身がユーザーの問いへの回答に必要な時だけ読む。
+- `<cosense:gyazo>` の画像取得はcosense CLIではなくcurlで行う。HTTP 200でも「Gyazo Error Page」と書かれた忍者のイラストが返る事がある。実体が無い時のGyazoの代替画像なので、読めた画像内容として扱わない
+- `type="video"` は、`thumbnail`（動画から切り出された静止ポスター）の画像から動画の内容をある程度確認できる。報告時は、動画全体ではなくポスターから分かった範囲である事を明示する
 
-- ダウンロード前に `readFileInfo` を確認する。`text` だけでユーザーの問いに足りるなら、ダウンロードもsubagentも省ける
-- `downloadFile` で一時ディレクトリ（scratchpad等）に保存する。画像は `--thumbnail` で取得すれば読むには十分な事が多い
-
-### Gyazoの画像・動画を読む
-
-本文中の `https://gyazo.com/<hash>` 形式のURL（hashは32桁hex）は、Gyazoにアップロードされた画像・動画である。`i.gyazo.com/<hash>.png` や `/raw` 付き、`t.gyazo.com/teams/<team>/<hash>`（Gyazo Teams）等の変種も、hashを取り出して `https://gyazo.com/<hash>` に読み替えれば同じ手順で読める。公開されている画像のみが対象で、cosense CLIではなくcurlで取得する。
-
-- まずoEmbed APIで種別を確認する: `curl -s 'https://api.gyazo.com/api/oembed?url=https://gyazo.com/<hash>'`
-  - 404は非公開・削除済み・存在しないhash等。読めない事を明示して先に進む
-- `type` が `photo` なら、サムネイルを一時ディレクトリ（scratchpad等）に保存して読む: `curl -fsSL 'https://gyazo.com/<hash>/thumb/1000' -o <保存先>`
-  - 読むにはこれで十分な事が多い。サムネイルが404の時（Teams等）や原寸が必要な時は、oEmbedの `url`（原寸の直リンク）を保存する
-- `type` が `video` なら、oEmbedの `thumbnail_url`（静止ポスターjpg）を保存して読む
-  - `thumb/1000` はアニメーションGIFが返るので動画には使わない。内容全体は確認できないので、ポスターから分かる範囲と限界を明示して報告する
-- HTTP 200でも「Gyazo Error Page」と書かれた忍者のイラストが返る事がある。実体が無い時のGyazoの代替画像なので、読めた画像内容として扱わない
-- GyazoのOCRテキストは取得できない。uploadファイルの `text` に相当する近道は無く、中身が必要なら画像を読む
-
-### 保存したファイルは原則subagentに読ませる
+## 保存したファイルは原則subagentに読ませる
 
 メインのagentが画像を直接Readすると、画像tokenがcontextに載ったまま以降の作業を圧迫する。保存したファイルのパスをsubagentに渡して読ませ、メイン側は報告テキストだけを受け取る。
 
