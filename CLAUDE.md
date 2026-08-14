@@ -12,6 +12,11 @@ cosense skillやCLIはこのリポジトリ内にある方を使う
 - CLIとSkillの責任境界ガイドライン: `docs/guidelines/cli-vs-skill.md`
   - 何にどういう役割をもたせるか説明している
 
+### SkillのE2Eテスト時
+
+- Agent SkillのE2Eテスト手順書: `docs/guidelines/skill-e2e-testing.md`
+  - subagentにskill文書だけでワークフローを完遂させ、手順書の不備を検証する方法
+
 # AIが作業をする際の重要なルール
 
 コード変更後の基本フロー:
