@@ -64,6 +64,11 @@ import {
   readProjectMembersSummary
 } from './commands/readProjectMembers.ts';
 import {
+  replaceLinks,
+  replaceLinksHelp,
+  replaceLinksSummary
+} from './commands/replaceLinks.ts';
+import {
   submitEdit,
   submitEditHelp,
   submitEditSummary
@@ -188,6 +193,11 @@ const commands: Record<string, CommandSpec> = {
     handler: submitEdit,
     summary: submitEditSummary,
     help: submitEditHelp
+  },
+  replaceLinks: {
+    handler: replaceLinks,
+    summary: replaceLinksSummary,
+    help: replaceLinksHelp
   }
 };
 

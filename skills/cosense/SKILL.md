@@ -93,6 +93,7 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 | search2hopLinks    | 2-hop近傍を全文検索でフィルタする                                                                                                                   |
 | previewEdit        | ページ編集opsをdry-runしてpreviewIdを取得する                                                                                                       |
 | submitEdit         | previewEditで取得したpreviewIdを使ってページ編集を確定する                                                                                          |
+| replaceLinks       | 旧タイトルへのリンク記法を新しいタイトルに一括置換する                                                                                              |
 
 ### コマンドの詳細を知りたい時
 

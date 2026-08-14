@@ -20,8 +20,9 @@ Usage:
   title:    <実際に書き込まれたpage title>
   url:      <作成または更新された page の URL>
 
-  url はサーバーが返す title から再構築される。 新規作成時にサーバーが auto-suffix した場合
-  (同名ページが既に存在する場合) は、 title/url にその suffix が反映される。
+  url はサーバーが返す title から再構築される。 同名ページが既に存在する場合、 サーバーは
+  タイトルに auto-suffix を付ける (新規作成でも既存ページのタイトル変更でも起きる)。
+  title/url にはその suffix が反映される。
 
 HTTPエラー:
   HTTP 400  preview を生成した時と違う project の URL を渡している
