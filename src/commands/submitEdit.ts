@@ -24,6 +24,10 @@ Usage:
   タイトルに auto-suffix を付ける (新規作成でも既存ページのタイトル変更でも起きる)。
   title/url にはその suffix が反映される。
 
+  既存ページのタイトルが変わった編集では、続けて以下を出力する:
+  titleChanged: "<変更前title>" -> "<変更後title>"
+  新旧タイトルはそれぞれJSON string
+
 HTTPエラー:
   HTTP 400  preview を生成した時と違う project の URL を渡している
   HTTP 401  認証なし
@@ -41,6 +45,7 @@ previewId は1回限り (consume-on-submit)。submit 後・5分 expire 後・con
 interface SubmitResponse {
   commitId: string;
   page: { title?: string } | null;
+  titleChanged?: { from?: string; to?: string };
 }
 
 export const submitEdit = async (args: string[]): Promise<void> => {
@@ -69,4 +74,18 @@ export const submitEdit = async (args: string[]): Promise<void> => {
   process.stdout.write(
     `commitId: ${response.commitId}\ntitle:    ${title}\nurl:      ${url}\n`
   );
+
+  // titleChangedはサーバーが対応している場合のみ返る
+  const titleChanged = response.titleChanged;
+  if (
+    typeof titleChanged?.from === 'string' &&
+    typeof titleChanged.to === 'string'
+  ) {
+    // タイトルには " や -> が含まれうるので、境界が一意に読めるようJSON stringで出力する
+    process.stdout.write(
+      `titleChanged: ${JSON.stringify(titleChanged.from)} -> ${JSON.stringify(
+        titleChanged.to
+      )}\n`
+    );
+  }
 };

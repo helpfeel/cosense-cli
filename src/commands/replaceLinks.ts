@@ -29,7 +29,8 @@ HTTPエラー:
   HTTP 400  <oldTitle> と <newTitle> が同じ / どちらかが空 / <newTitle> がリンク記法として成立しない
   HTTP 401  認証なし
   HTTP 403  権限不足（PAT利用時、projectのmemberでない 等）
-  HTTP 500  一部のページの更新に失敗した。 同じ引数で再実行すると、 未置換のページだけが再び対象になる
+  HTTP 500  一部のページの更新に失敗した。 同じ引数で再実行できる。 置換済みのリンクが
+            別の文字列へ再置換される事はない
 `;
 
 interface ReplaceLinksResponse {
