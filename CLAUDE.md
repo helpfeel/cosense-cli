@@ -14,8 +14,8 @@ cosense skillやCLIはこのリポジトリ内にある方を使う
 
 ### SkillのE2Eテスト時
 
-- Agent SkillのE2Eテスト手順書: `docs/guidelines/skill-e2e-testing.md`
-  - subagentにskill文書だけでワークフローを完遂させ、手順書の不備を検証する方法
+- Agent SkillのE2Eテスト手順: `docs/guidelines/skill-e2e-testing.md`
+  - subagentにskillの手順書だけでワークフローを完遂させ、その不備を検証する方法
 
 # AIが作業をする際の重要なルール
 
