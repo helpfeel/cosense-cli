@@ -3,7 +3,7 @@ name: version-bump
 description: >-
   CLIまたはAgent Skillのバージョンを上げるskill。
   ユーザーが「バージョンを上げて」「version bump して」「リリース準備して」「新しいバージョンを切って」等と言った時に使用する。
-  対象（CLI / Agent Skill）を確認し、前回リリース以降の変更を提示してbump種別を決め、ローカルにcommitとtagを作る。
+  対象（CLI / Agent Skill / 両方）を確認し、前回リリース以降の変更を提示してbump種別を決め、ローカルにcommitとtagを作る。
 ---
 
 # version-bump 手順書
@@ -26,6 +26,7 @@ description: >-
 
 - **CLI** — npmパッケージ
 - **Agent Skill** — Claude plugin
+- **両方** — CLIフローを完了させてからSkillフローに進む。Skillフローを先にやるとworking treeが汚れ、`npm version` が失敗する
 
 ## 前提チェック（bump前に必ず確認）
 
