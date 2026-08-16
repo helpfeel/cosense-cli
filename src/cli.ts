@@ -74,6 +74,11 @@ import {
   submitEditSummary
 } from './commands/submitEdit.ts';
 import {
+  uploadFile,
+  uploadFileHelp,
+  uploadFileSummary
+} from './commands/uploadFile.ts';
+import {
   search1hopLinks,
   search1hopLinksHelp,
   search1hopLinksSummary
@@ -143,6 +148,11 @@ const commands: Record<string, CommandSpec> = {
     handler: downloadFile,
     summary: downloadFileSummary,
     help: downloadFileHelp
+  },
+  uploadFile: {
+    handler: uploadFile,
+    summary: uploadFileSummary,
+    help: uploadFileHelp
   },
   readProjectMembers: {
     handler: readProjectMembers,

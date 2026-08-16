@@ -14,6 +14,7 @@ Usage:
   <projectUrl>  プロジェクトのURL（例: https://scrapbox.io/shokai）
 
 戻り値（top-levelの主なkey）:
+  projectId               string                 projectのID
   users                   Array<User>            現メンバー一覧
   memberSnapshots         Array<Snapshot>?       退去済みメンバーの記録
   serviceAccounts         Array<ServiceAccount>? Service Account一覧
@@ -42,6 +43,7 @@ ServiceAccount の field:
 
 戻り値のJSON抜粋例:
 {
+  "projectId": "58043f...",
   "users": [
     {
       "id": "5724627723541f110097c291",
