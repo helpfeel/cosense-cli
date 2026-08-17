@@ -242,7 +242,9 @@ if (command === '--version') {
   process.exit(0);
 }
 
-const spec = command ? commands[command] : undefined;
+// cosense constructorやcosense __proto__はObject.prototypeのpropertyを引いてしまう
+const spec =
+  command && Object.hasOwn(commands, command) ? commands[command] : undefined;
 if (!spec) {
   process.stderr.write(
     `invalid command${command ? `: ${command}` : ''}\n` +

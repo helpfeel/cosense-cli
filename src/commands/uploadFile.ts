@@ -20,13 +20,13 @@ Usage:
   <filePath>    アップロードするローカルファイルのパス
 
 オプション:
-  --content-type <type>  ファイルのMIME type。省略時は拡張子から推定し、不明な拡張子はapplication/octet-streamになる
+  --content-type <type>  ファイルのMIME type
 
 出力（JSON）:
-  embedUrl      string  ページ本文への埋め込みに使うファイルURL
-  originalname  string  アップロードしたファイル名
-  contentType   string  embedUrlが配信するファイルのMIME type
-  size          number  ファイルのbyte数
+  embedUrl      string   ページ本文への埋め込みに使うファイルURL
+  originalname  string   アップロードしたファイル名
+  contentType   string?  ファイルのMIME type
+  size          number   ファイルのbyte数
 
 例:
   cosense uploadFile 'https://scrapbox.io/example' ./photo.png
@@ -55,7 +55,7 @@ const parseArgs = (args: string[]): ParsedArgs => {
         throw new Error(`--content-type specified multiple times\n${usage}`);
       }
       const value = args[i + 1];
-      if (value === undefined || value.startsWith('--')) {
+      if (!value || value.startsWith('--')) {
         throw new Error(`--content-type requires a value\n${usage}`);
       }
       contentType = value;
@@ -81,11 +81,11 @@ const parseArgs = (args: string[]): ParsedArgs => {
 const uploadToSignedUrl = async (
   url: string,
   body: Uint8Array,
-  contentType: string
+  contentType: string | undefined
 ): Promise<void> => {
   const res = await fetch(url, {
     method: 'PUT',
-    headers: { 'Content-Type': contentType },
+    headers: contentType ? { 'Content-Type': contentType } : {},
     body
   });
   if (res.ok) {
@@ -149,10 +149,10 @@ export const uploadFile = async (args: string[]): Promise<void> => {
   let resultContentType = contentType;
   if (uploadRequest.embedUrl) {
     // 同一ファイルがアップロード済みの場合、serverはupload-requestで即embedUrlを返す。
-    // embedUrlが配信するのは保存済みファイルなので、contentTypeはローカル推定よりserver値を優先する
+    // embedUrlが配信するのは保存済みファイルなので、ローカル推定の型は当てにならない
     embedUrl = uploadRequest.embedUrl;
     originalname = uploadRequest.originalname ?? name;
-    resultContentType = uploadRequest.contentType ?? contentType;
+    resultContentType = uploadRequest.contentType?.trim() || undefined;
   } else {
     const { signedUrl, fileId } = uploadRequest;
     if (!signedUrl || !fileId) {
