@@ -4,16 +4,16 @@ import { requestJson } from '../lib/request.ts';
 import { resolveCredential } from '../lib/settings.ts';
 
 export const submitEditSummary =
-  'previewEditで取得したpreviewIdを使ってページ編集を確定する';
+  'previewEdit/previewDeleteで取得したpreviewIdを使ってページ編集・削除を確定する';
 
-export const submitEditHelp = `submitEdit - previewEditで取得したpreviewIdを使ってページ編集を確定する
+export const submitEditHelp = `submitEdit - previewEdit/previewDeleteで取得したpreviewIdを使ってページ編集・削除を確定する
 
 Usage:
   cosense submitEdit <projectUrl> <previewId>
 
 引数:
   <projectUrl>  プロジェクトのURL (例: https://scrapbox.io/shokai)。 末尾に余分なpathがあるとerror
-  <previewId>   previewEdit の戻り値の previewId
+  <previewId>   previewEdit または previewDelete の戻り値の previewId
 
 戻り値（plain text）:
   commitId: <生成されたcommitのID>
@@ -28,6 +28,11 @@ Usage:
   titleChanged: "<変更前title>" -> "<変更後title>"
   新旧タイトルはそれぞれJSON string
 
+  previewDelete の previewId を確定した時は、代わりに以下を出力する:
+  commitId: <生成されたcommitのID>
+  title:    <削除されたpage title>
+  deleted:  true
+
 HTTPエラー:
   HTTP 400  preview を生成した時と違う project の URL を渡している
   HTTP 401  認証なし
@@ -36,6 +41,9 @@ HTTPエラー:
   HTTP 409 {"error":"NotFastForward","latest":...}
             preview生成後にページが更新された。最新stateを再取得して ops を作り直し、
             previewEdit からやり直す必要がある
+  HTTP 409 {"error":"NotFastForward","latest":null}
+            対象ページが既に存在しない。削除の確定でこれが返った場合、ページは別経路で
+            削除済みであり、目的の状態は達成されている。リトライ不要
   HTTP 409 {"error":"DuplicateTitle"}
             preview→submit の間に他人が同名ページを作った (race condition)
 
@@ -45,6 +53,7 @@ previewId は1回限り (consume-on-submit)。submit 後・5分 expire 後・con
 interface SubmitResponse {
   commitId: string;
   page: { title?: string } | null;
+  pageDeleted?: { title?: string };
   titleChanged?: { from?: string; to?: string };
 }
 
@@ -63,6 +72,15 @@ export const submitEdit = async (args: string[]): Promise<void> => {
     method: 'POST',
     body: { previewId }
   })) as SubmitResponse;
+
+  // pageDeletedはページ削除commitの確定時に返る。削除されたページにURLは無い
+  const pageDeleted = response.pageDeleted;
+  if (pageDeleted) {
+    process.stdout.write(
+      `commitId: ${response.commitId}\ntitle:    ${pageDeleted.title ?? ''}\ndeleted:  true\n`
+    );
+    return;
+  }
 
   const title = response.page?.title;
   if (typeof title !== 'string') {

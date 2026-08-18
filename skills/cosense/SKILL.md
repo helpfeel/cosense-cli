@@ -9,7 +9,7 @@ description: >-
 # Cosense Skill 手順書
 
 `cosense` CLIを使い、Cosenseのページを読み・調べてユーザーに回答する。
-書き込み (ページ編集・コメント追記等) はユーザーが明示的に指示した時のみ行う。
+書き込み・削除 (ページ編集・コメント追記・ページやファイルの削除等) はユーザーが明示的に指示した時のみ行う。
 
 ## Cosenseとはどういう物か
 
@@ -91,6 +91,7 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 | readFileInfo       | ファイルのメタデータと抽出済みテキストを取得する                                                                                                    |
 | downloadFile       | ファイル本体をダウンロードしてローカルに保存する                                                                                                    |
 | uploadFile         | ファイルをprojectにアップロードして埋め込みURLを取得する                                                                                            |
+| deleteFile         | ファイルをprojectから削除する                                                                                                                       |
 | readProjectMembers | プロジェクトのメンバー一覧を取得する                                                                                                                |
 | listPages          | プロジェクトのページ一覧を取得する                                                                                                                  |
 | list1hopLinks      | 1-hop近傍を取得する                                                                                                                                 |
@@ -100,7 +101,8 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 | search1hopLinks    | 1-hop近傍を全文検索でフィルタする                                                                                                                   |
 | search2hopLinks    | 2-hop近傍を全文検索でフィルタする                                                                                                                   |
 | previewEdit        | ページ編集opsをdry-runしてpreviewIdを取得する                                                                                                       |
-| submitEdit         | previewEditで取得したpreviewIdを使ってページ編集を確定する                                                                                          |
+| previewDelete      | ページ削除をdry-runしてpreviewIdを取得する                                                                                                          |
+| submitEdit         | previewEdit/previewDeleteで取得したpreviewIdを使ってページ編集・削除を確定する                                                                      |
 | replaceLinks       | 旧タイトルへのリンク記法を新しいタイトルに一括置換する                                                                                              |
 
 ### コマンドの詳細を知りたい時

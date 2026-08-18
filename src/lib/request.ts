@@ -40,7 +40,7 @@ export class HttpError extends Error {
 
 interface RequestOptions {
   credential?: Credential;
-  method?: 'GET' | 'POST';
+  method?: 'GET' | 'POST' | 'DELETE';
   body?: unknown;
 }
 

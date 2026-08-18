@@ -18,6 +18,11 @@ import {
   browseRelatedPagesSummary
 } from './commands/browseRelatedPages.ts';
 import {
+  deleteFile,
+  deleteFileHelp,
+  deleteFileSummary
+} from './commands/deleteFile.ts';
+import {
   downloadFile,
   downloadFileHelp,
   downloadFileSummary
@@ -43,6 +48,11 @@ import {
   listProjectsSummary
 } from './commands/listProjects.ts';
 import { login, loginHelp, loginSummary } from './commands/login.ts';
+import {
+  previewDelete,
+  previewDeleteHelp,
+  previewDeleteSummary
+} from './commands/previewDelete.ts';
 import {
   previewEdit,
   previewEditHelp,
@@ -154,6 +164,11 @@ const commands: Record<string, CommandSpec> = {
     summary: uploadFileSummary,
     help: uploadFileHelp
   },
+  deleteFile: {
+    handler: deleteFile,
+    summary: deleteFileSummary,
+    help: deleteFileHelp
+  },
   readProjectMembers: {
     handler: readProjectMembers,
     summary: readProjectMembersSummary,
@@ -198,6 +213,11 @@ const commands: Record<string, CommandSpec> = {
     handler: previewEdit,
     summary: previewEditSummary,
     help: previewEditHelp
+  },
+  previewDelete: {
+    handler: previewDelete,
+    summary: previewDeleteSummary,
+    help: previewDeleteHelp
   },
   submitEdit: {
     handler: submitEdit,
