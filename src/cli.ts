@@ -43,6 +43,11 @@ import {
   listPagesSummary
 } from './commands/listPages.ts';
 import {
+  listPageSnapshots,
+  listPageSnapshotsHelp,
+  listPageSnapshotsSummary
+} from './commands/listPageSnapshots.ts';
+import {
   listProjects,
   listProjectsHelp,
   listProjectsSummary
@@ -68,6 +73,11 @@ import {
   readPageHelp,
   readPageSummary
 } from './commands/readPage.ts';
+import {
+  readPageSnapshot,
+  readPageSnapshotHelp,
+  readPageSnapshotSummary
+} from './commands/readPageSnapshot.ts';
 import {
   readProjectMembers,
   readProjectMembersHelp,
@@ -149,6 +159,11 @@ const commands: Record<string, CommandSpec> = {
     help: browseRelatedPagesHelp
   },
   readPage: { handler: readPage, summary: readPageSummary, help: readPageHelp },
+  readPageSnapshot: {
+    handler: readPageSnapshot,
+    summary: readPageSnapshotSummary,
+    help: readPageSnapshotHelp
+  },
   readFileInfo: {
     handler: readFileInfo,
     summary: readFileInfoSummary,
@@ -178,6 +193,11 @@ const commands: Record<string, CommandSpec> = {
     handler: listPages,
     summary: listPagesSummary,
     help: listPagesHelp
+  },
+  listPageSnapshots: {
+    handler: listPageSnapshots,
+    summary: listPageSnapshotsSummary,
+    help: listPageSnapshotsHelp
   },
   list1hopLinks: {
     handler: list1hopLinks,

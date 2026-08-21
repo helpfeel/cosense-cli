@@ -88,12 +88,14 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 | browseRelatedPages | 1-hop+2-hopの関連ページタイトル一覧をAIが読みやすい形式で出力する。infobox定義ページでは文芸的データベース(TSV表)を出力する                         |
 | browsePageChanges  | ページの編集履歴(commit)をpageId起点で取得し、誰が何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する                            |
 | readPage           | 単一ページを読む                                                                                                                                    |
+| readPageSnapshot   | snapshotのIDを指定してPage History上の過去の本文を読む                                                                                              |
 | readFileInfo       | ファイルのメタデータと抽出済みテキストを取得する                                                                                                    |
 | downloadFile       | ファイル本体をダウンロードしてローカルに保存する                                                                                                    |
 | uploadFile         | ファイルをprojectにアップロードして埋め込みURLを取得する                                                                                            |
 | deleteFile         | ファイルをprojectから削除する                                                                                                                       |
 | readProjectMembers | プロジェクトのメンバー一覧を取得する                                                                                                                |
 | listPages          | プロジェクトのページ一覧を取得する                                                                                                                  |
+| listPageSnapshots  | ページのsnapshot一覧(Page History)をpageId起点で取得する                                                                                            |
 | list1hopLinks      | 1-hop近傍を取得する                                                                                                                                 |
 | list2hopLinks      | 2-hop近傍を取得する                                                                                                                                 |
 | searchVector       | ベクトル検索でページを探す（タイトル+本文中リンク記法のみ対象）                                                                                     |
