@@ -15,7 +15,9 @@ Usage:
   <pageId>      削除対象ページのID。 readPage 出力の top-level "id" field から取得する
 
 戻り値（plain text）:
-  previewId / expireAt / status (delete) / project / title のヘッダー + 削除されるpage全体。
+  previewId / expireAt / status (delete) / project / title / commitId のヘッダー +
+  削除されるpage全体。
+  commitId は preview を作った時点の削除対象ページの最新コミット。
   preview は dry-run なのでこの段階では削除されない。
   previewId を submitEdit に渡すと削除が確定する。5分で expire する。
 
@@ -27,6 +29,7 @@ HTTPエラー:
 
 interface PagePreview {
   title?: string;
+  commitId?: string;
   lines?: { id: string; text: string }[];
 }
 
@@ -67,6 +70,7 @@ export const previewDelete = async (args: string[]): Promise<void> => {
   lines.push('status:    delete');
   lines.push(`project:   ${projectName}`);
   lines.push(`title:     ${response.pagePreview?.title ?? ''}`);
+  lines.push(`commitId:  ${response.pagePreview?.commitId ?? ''}`);
   lines.push('');
   lines.push('page (will be deleted):');
   for (const line of response.pagePreview?.lines ?? []) {

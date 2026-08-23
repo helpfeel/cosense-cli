@@ -47,8 +47,10 @@ stdinから受け取る入力形式（既存ページ編集モード, JSON）:
   する必要がある（消えた lineId を anchor に指定すると 422）。
 
 戻り値（plain text）:
-  previewId / expireAt / status (create or update) / project / title のヘッダー +
+  previewId / expireAt / status (create or update) / project / title / commitId のヘッダー +
   ops summary + 適用後 page 全体。
+  commitId は preview を作った時点の編集対象ページの最新コミット。 新規作成 (status: create)
+  では出力されない。
   変更行の頭には > (新規) または * (更新) のマーカーと末尾 # <lineId> が付く。
   既存行(変更なし)はマーカーなし。
   preview は dry-run なのでこの段階ではpage URLは確定しない。 確定URLは submitEdit の出力で確認する。
@@ -98,6 +100,7 @@ type RawChange = RawInsertChange | RawUpdateChange | RawDeleteChange;
 interface PagePreview {
   title?: string;
   persistent?: boolean;
+  commitId?: string;
   lines?: { id: string; text: string }[];
 }
 
@@ -212,6 +215,10 @@ const formatPreview = (
   lines.push(`status:    ${status}`);
   lines.push(`project:   ${projectName}`);
   lines.push(`title:     ${title}`);
+  // 新規作成 (persistent: false) のページにはまだcommitが無く、サーバーもcommitIdを返さない
+  if (typeof pagePreview?.commitId === 'string') {
+    lines.push(`commitId:  ${pagePreview.commitId}`);
+  }
   lines.push('');
   lines.push('ops:');
   for (const op of ops) {
