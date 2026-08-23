@@ -3,7 +3,7 @@ name: version-bump
 description: >-
   CLIまたはAgent Skillのバージョンを上げるskill。
   ユーザーが「バージョンを上げて」「version bump して」「リリース準備して」「新しいバージョンを切って」等と言った時に使用する。
-  対象（CLI / Agent Skill / 両方）を確認し、前回リリース以降の変更を提示してbump種別を決め、ローカルにcommitとtagを作る。
+  前回リリース以降の変更を調べた上で対象（CLI / Agent Skill / 両方）を確認し、bump種別を決め、ローカルにcommitとtagを作る。
 ---
 
 # version-bump 手順書
@@ -20,54 +20,22 @@ description: >-
 - **やる**: バージョン番号の更新、commit、tag作成（すべてローカル）
 - **やらない**: `git push` と `npm publish`。これらは不可逆な外部公開なので、AIは実行しない。
 
-## Step 0: 対象を質問する
-
-どれをbumpするかユーザーに質問する。
-
-- **CLI** — npmパッケージ
-- **Agent Skill** — Claude plugin
-- **両方** — CLIフローを完了させてからSkillフローに進む。Skillフローを先にやるとworking treeが汚れ、`npm version` が失敗する
-
-## 前提チェック（bump前に必ず確認）
+## 前提チェック（調査前に必ず確認）
 
 1. 現在のbranchが `main` か確認する。`git branch --show-current` が `main` でなければ、止めてユーザーに確認する。
 2. working treeがクリーンか確認する。`git status --porcelain` に出力があれば止める。無関係な変更をリリースcommitに混ぜない。また `npm version` はダーティなツリーで失敗する。
 
-## CLIフロー
+## Step 0: 両方の未リリース変更を調べてから対象を質問する
 
-1. 前回リリース地点を特定する。
+ユーザーは「どちらに未リリース変更があるか」を材料に対象を決める。質問より先に、CLIとSkillの両方を調べる。
+
+1. CLIの前回リリース地点を特定する。
 
    ```
    git describe --tags --abbrev=0 --match 'v*'
    ```
 
-2. 前回リリース以降のCLI変更を提示する。
-
-   ```
-   git log --oneline <前回tag>..HEAD -- src/ bin/ package.json
-   ```
-
-   変更が空なら、bumpに進まず「対象変更なし。空リリースを作るか」をユーザーに確認する。
-
-3. 上の変更一覧を根拠に、ユーザーへ `major` / `minor` / `patch` のどれにするか質問する。
-4. `npm run lint` を通す。壊れた状態のコードにタグを打たない。失敗したら止めて報告する。
-5. これから作るtag `vX.Y.Z` が既に存在しないか確認する。存在したら止める（リリース途中/番号衝突の可能性）。
-
-   ```
-   git rev-parse -q --verify refs/tags/vX.Y.Z
-   ```
-
-6. bumpを実行する。`<type>` はStep 3でユーザーが選んだもの。
-
-   ```
-   npm version <type>
-   ```
-
-   これで `package.json` と `package-lock.json` のversionが更新され、commit `X.Y.Z` と annotated tag `vX.Y.Z` が作られる（npmが自動で行う）。
-
-## Skillフロー
-
-1. 前回リリース地点を特定する。まず `skill-v*` タグを探し、**終了コードで**フォールバックを判断する（`fatal` の文言に依存しない）。
+2. Skillの前回リリース地点を特定する。まず `skill-v*` タグを探し、**終了コードで**フォールバックを判断する（`fatal` の文言に依存しない）。
 
    ```
    git describe --tags --abbrev=0 --match 'skill-v*'
@@ -81,33 +49,60 @@ description: >-
 
    タグも旧release commitも無い場合は初回リリースとして全履歴を対象にする。
 
-2. 前回リリース以降のSkill変更を提示する。`<境界>` はStep 1で得たtagまたはcommit。
+3. それぞれの未リリース変更を取得する。`<CLI境界>` `<Skill境界>` はStep 1・2で得たtagまたはcommit。
 
    ```
-   git log --oneline <境界>..HEAD -- skills/ .claude-plugin/
+   git log --oneline <CLI境界>..HEAD -- src/ bin/ package.json
+   git log --oneline <Skill境界>..HEAD -- skills/ .claude-plugin/
    ```
 
-   変更が空なら、bumpに進まず「対象変更なし。空リリースを作るか」をユーザーに確認する。
+4. 調べた両方の変更一覧を提示した上で、どれをbumpするかユーザーに質問する。選択肢には各対象の現在のバージョンと未リリース変更の件数を含め、変更が0件の対象はそれと分かるようにする。
 
-3. 上の変更一覧を根拠に、ユーザーへ `major` / `minor` / `patch` のどれにするか質問する。
-4. `.claude-plugin/marketplace.json` の `plugins[]` から `name` が `cosense-cli` のエントリを1件特定し、その `version` を読む（該当が0件または複数件なら止める）。値が `X.Y.Z` 形式でなければ止める。選んだ種別で次の番号を算出する。
+   - **CLI** — npmパッケージ
+   - **Agent Skill** — Claude plugin
+   - **両方** — CLIフローを完了させてからSkillフローに進む。Skillフローを先にやるとworking treeが汚れ、`npm version` が失敗する
+
+   変更が0件の対象が選ばれた場合は、bumpに進まず「対象変更なし。空リリースを作るか」をユーザーに確認する。
+
+## CLIフロー
+
+1. Step 0で提示したCLIの変更一覧を根拠に、ユーザーへ `major` / `minor` / `patch` のどれにするか質問する。
+2. `npm run lint` を通す。壊れた状態のコードにタグを打たない。失敗したら止めて報告する。
+3. これから作るtag `vX.Y.Z` が既に存在しないか確認する。存在したら止める（リリース途中/番号衝突の可能性）。
+
+   ```
+   git rev-parse -q --verify refs/tags/vX.Y.Z
+   ```
+
+4. bumpを実行する。`<type>` はStep 1でユーザーが選んだもの。
+
+   ```
+   npm version <type>
+   ```
+
+   これで `package.json` と `package-lock.json` のversionが更新され、commit `X.Y.Z` と annotated tag `vX.Y.Z` が作られる（npmが自動で行う）。
+
+## Skillフロー
+
+1. Step 0で提示したSkillの変更一覧を根拠に、ユーザーへ `major` / `minor` / `patch` のどれにするか質問する。
+2. `.claude-plugin/marketplace.json` の `plugins[]` から `name` が `cosense-cli` のエントリを1件特定し、その `version` を読む（該当が0件または複数件なら止める）。値が `X.Y.Z` 形式でなければ止める。選んだ種別で次の番号を算出する。
    - major: `X.Y.Z` → `(X+1).0.0`
    - minor: `X.Y.Z` → `X.(Y+1).0`
    - patch: `X.Y.Z` → `X.Y.(Z+1)`
-5. そのエントリの `version` を新しい番号に書き換える。
-6. manifestを検証する。失敗したら止めて報告する。
+3. そのエントリの `version` を新しい番号に書き換える。
+4. manifestを検証する。失敗したら止めて報告する。
 
    ```
    claude plugin validate . --strict
    ```
 
-7. これから作るtag `skill-vX.Y.Z` が既に存在しないか確認する。存在したら止める。
+5. これから作るtag `skill-vX.Y.Z` が既に存在しないか確認する。存在したら止める。
 
    ```
    git rev-parse -q --verify refs/tags/skill-vX.Y.Z
    ```
 
-8. commitと annotated tag を作る。CLIのtag（`npm version` が作るannotated tag）と形式を揃えるため `-a` を付ける。
+6. commitと annotated tag を作る。CLIのtag（`npm version` が作るannotated tag）と形式を揃えるため `-a` を付ける。
 
    ```
    git add .claude-plugin/marketplace.json
