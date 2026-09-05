@@ -1,6 +1,6 @@
 # @helpfeel/cosense-cli
 
-Cosenseのページを読み・調べ・編集するAgent SkillとCLI
+Cosenseのページを読み・調べ・編集するAgent Skillとそのハーネス
 
 ## Install Agent Skill
 
@@ -34,7 +34,7 @@ npx skills update cosense
 
 ## Install CLI
 
-Skillの実行にはCLIが必要です
+SkillはこのCLIをハーネスとして使います。Skillの実行に必要です
 
 ```bash
 npm install -g @helpfeel/cosense-cli

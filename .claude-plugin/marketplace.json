@@ -3,7 +3,7 @@
   "owner": {
     "name": "Helpfeel Inc."
   },
-  "description": "CosenseのAgent Skillとツール",
+  "description": "CosenseのAgent Skillとそのハーネス",
   "plugins": [
     {
       "name": "cosense-cli",

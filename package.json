@@ -1,7 +1,7 @@
 {
   "name": "@helpfeel/cosense-cli",
   "version": "1.14.1",
-  "description": "Cosense (旧Scrapbox) のページを読み・調べ・編集するAgent Skill用のCLI",
+  "description": "Cosense (旧Scrapbox) のページを読み・調べ・編集するAgent Skillのハーネス",
   "homepage": "https://github.com/helpfeel/cosense-cli",
   "license": "MIT",
   "repository": {
