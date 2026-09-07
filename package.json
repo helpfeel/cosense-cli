@@ -24,7 +24,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "tsx": "4.23.12"
+    "tsx": "4.23.13"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
