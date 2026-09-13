@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "shokai-agent-skills": {
+      "source": { "source": "github", "repo": "shokai/agent-skills" },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "codex-consultation@shokai-agent-skills": true,
+    "subagent-consultation@shokai-agent-skills": true,
+    "sanity-review@shokai-agent-skills": true,
+    "conversation-context@shokai-agent-skills": true,
+    "library-update-review@shokai-agent-skills": true
+  }
+}
