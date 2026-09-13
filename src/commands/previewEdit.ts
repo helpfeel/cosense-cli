@@ -48,11 +48,14 @@ stdinから受け取る入力形式（既存ページ編集モード, JSON）:
 
 戻り値（plain text）:
   previewId / expireAt / status (create or update) / project / title / commitId のヘッダー +
-  ops summary + 適用後 page 全体。
+  ops summary + 適用後 page 全体 + 変更行の内部リンク一覧。
   commitId は preview を作った時点の編集対象ページの最新コミット。 新規作成 (status: create)
   では出力されない。
   変更行の頭には > (新規) または * (更新) のマーカーと末尾 # <lineId> が付く。
   既存行(変更なし)はマーカーなし。
+  末尾の internal links in changed lines: は、 この変更で書き換えた行と、 変更の影響でリンク記法
+  として解釈されるようになった既存行から張られる内部リンクの接続先を、 重複を除いて列挙する。
+  [title] と #tag は title、 [/project/title] は /project/title の形。 1件も無ければ (none)。
   preview は dry-run なのでこの段階ではpage URLは確定しない。 確定URLは submitEdit の出力で確認する。
   previewId は submitEdit に渡して commit を確定する。5分で expire する。
 
@@ -108,6 +111,7 @@ interface PreviewResponse {
   previewId: string;
   expireAt: string;
   pagePreview: PagePreview | null;
+  changedLinks?: string[];
 }
 
 const newLineId = (): string => randomBytes(12).toString('hex');
@@ -233,6 +237,17 @@ const formatPreview = (
       lines.push(`* ${line.text} # ${line.id}`);
     } else {
       lines.push(`  ${line.text}`);
+    }
+  }
+  // changedLinksはサーバーが対応している場合のみ返る
+  if (Array.isArray(response.changedLinks)) {
+    lines.push('');
+    lines.push('internal links in changed lines:');
+    if (response.changedLinks.length === 0) {
+      lines.push('  (none)');
+    }
+    for (const link of response.changedLinks) {
+      lines.push(`  ${link}`);
     }
   }
   return lines.join('\n');
