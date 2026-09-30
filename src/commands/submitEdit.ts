@@ -18,7 +18,7 @@ Usage:
 戻り値（plain text）:
   commitId: <生成されたcommitのID>
   title:    <実際に書き込まれたpage title>
-  url:      <作成または更新された page の URL>
+  url:      <作成または更新された page の URL。タイトルはパーセントエンコード済み>
 
   url はサーバーが返す title から再構築される。 同名ページが既に存在する場合、 サーバーは
   タイトルに auto-suffix を付ける (新規作成でも既存ページのタイトル変更でも起きる)。

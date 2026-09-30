@@ -1,4 +1,5 @@
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
+import { encodeTitleForUrl } from '../lib/encodeTitle.ts';
 import { applyFileMarkup, fetchFileMarkups } from '../lib/fileMarkup.ts';
 import { renderLiterateDatabase } from '../lib/literateDatabase.ts';
 import { parsePageUrl } from '../lib/parseUrl.ts';
@@ -34,9 +35,10 @@ Usage:
   # <title>
 
   ## メタデータ
-    タイトル / pageId / commitId / 作成日時 / 最終更新日時 / 最終アクセス日時 /
+    タイトル / URL / pageId / commitId / 作成日時 / 最終更新日時 / 最終アクセス日時 /
     被リンク数 / pageRank / views / snapshot / 行数 / 文字数 / 作成者 / 最終更新者 /
     関わったユーザー
+    URL はタイトルをパーセントエンコードしたページURL
     pageId はページの不変ID、commitId は閲覧時点の最新コミット。共同編集中に
     ページを見失ったら、これらを browsePageChanges に渡して変更（リネーム含む）を辿れる
 
@@ -90,8 +92,8 @@ Usage:
     ## 1 hop link（表に載っていないページ） に出力する
 
 persistent: false の時:
-  メタデータ・アイコン・テロメア・Infoboxは省略。 (このページはまだ作成されていません) と
-  本文（テンプレート）と Related Pages を出力する
+  アイコン・テロメア・Infoboxは省略し、メタデータはURLだけを出力する。
+  (このページはまだ作成されていません) と 本文（テンプレート）と Related Pages を出力する
 
 URLに #<lineId> fragmentが指定された時:
   タイトル直後に判定結果を1行出力する。
@@ -206,9 +208,10 @@ const buildTelomere = (lines: PageLine[]): TelomereEntry[] => {
   return [...byUser.values()].sort((a, b) => b.lineCount - a.lineCount);
 };
 
-const renderMetadata = (page: PageData): string => {
+const renderMetadata = (page: PageData, pageUrl: string): string => {
   const items: string[] = [];
   if (typeof page.title === 'string') items.push(`- タイトル: ${page.title}`);
+  items.push(`- URL: ${pageUrl}`);
   if (typeof page.id === 'string') items.push(`- pageId: ${page.id}`);
   if (typeof page.commitId === 'string') {
     items.push(`- commitId: ${page.commitId}`);
@@ -358,10 +361,12 @@ export const browsePage = async (args: string[]): Promise<void> => {
 
   const title = page.title ?? '';
   const persistent = page.persistent !== false;
+  const pageUrl = `${origin}/${projectName}/${encodeTitleForUrl(title)}`;
   const sections: string[] = [`# ${title}`];
 
   if (!persistent) {
     sections.push('(このページはまだ作成されていません)');
+    sections.push(`## メタデータ\n\n- URL: ${pageUrl}`);
     const { body } = renderBody(page.lines ?? [], null, new Map());
     sections.push(`## 本文（テンプレート）\n\n${body}`);
     const related = renderRelatedPages(hopValue, page);
@@ -409,7 +414,7 @@ export const browsePage = async (args: string[]): Promise<void> => {
   ]);
   enrichPageUsers(page, userMap);
 
-  sections.push(renderMetadata(page));
+  sections.push(renderMetadata(page, pageUrl));
 
   const iconsSection = renderHumanIcons(page.icons, userMap);
   if (iconsSection) sections.push(iconsSection);

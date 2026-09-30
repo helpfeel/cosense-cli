@@ -1,13 +1,10 @@
-// 人が読める URL を作るための encoder (cosense 本家の「Copy readable link」 相当)。
-// Unicode 文字 (Japanese 等) は raw のまま (browser は IRI として透過処理する)。
-// cosense server の route match (`/:projectName/:title`, `:title=[^/]+`) を満たすため
-// title 内の `/` は `%2F` 必須。 URL syntax を破壊する `%` `?` `#` も percent-encode する。
-// space は cosense convention で `_` に置換。
+// 非ASCIIを生で残すと、`%2F`等と混ざったURLをmacOSのターミナルが開く時に`%`が再エンコードされ、別のページに飛ぶ
+// 半角スペースはCosenseの慣習で`_`に置換する
 export const encodeTitleForUrl = (title: string): string => {
-  return title
-    .replace(/%/g, '%25')
-    .replace(/\//g, '%2F')
-    .replace(/\?/g, '%3F')
-    .replace(/#/g, '%23')
-    .replace(/ /g, '_');
+  // 孤立サロゲートが残っているとencodeURIComponentが例外を投げる
+  return encodeURIComponent(title.toWellFormed().replace(/ /g, '_')).replace(
+    // encodeURIComponentが残すRFC 3986の予約文字。括弧はMarkdownリンクのリンク先を、`'`はshellのクォートを壊しうる
+    /[!'()*]/g,
+    c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  );
 };
