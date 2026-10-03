@@ -8,3 +8,12 @@ export const encodeTitleForUrl = (title: string): string => {
     c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
   );
 };
+
+// Cosenseの「Copy readable link」と同じく、日本語等を生で残して人が読めるURLにする
+// URLパーサーは`\`を`/`と解釈し、末尾のC0制御文字を取り除く。空白文字と`<>`は貼った先でURLの自動リンクを途中で切り、`'`はshellのクォートを壊す。これらを`/` `%` `?` `#`と共にエスケープする
+export const encodeTitleForReadableLink = (title: string): string =>
+  title
+    .replace(/ /g, '_')
+    .replace(/[/%?#\\<>\p{Cc}]|\s/gu, c => encodeURIComponent(c))
+    // encodeURIComponentは`'`をエスケープしない
+    .replace(/'/g, '%27');

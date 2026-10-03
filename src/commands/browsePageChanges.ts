@@ -1,4 +1,7 @@
-import { encodeTitleForUrl } from '../lib/encodeTitle.ts';
+import {
+  encodeTitleForReadableLink,
+  encodeTitleForUrl
+} from '../lib/encodeTitle.ts';
 import { formatTimestamp } from '../lib/formatTimestamp.ts';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
@@ -32,7 +35,7 @@ Usage:
 出力形式（Markdown plain text。JSONではない）:
   # ページ変更履歴
     pageId / 範囲（--since より後か全履歴か）/ commit数 / title change（変更後タイトル、無ければ なし）
-    タイトルが変わっていた時のみ、新URLも出力する
+    タイトルが変わっていた時のみ、新URLと新Readable linkも出力する
   ## 変更
     時系列の変更イベントを「<日時>\t<誰>が<何を>」の形（TAB区切り）で列挙する。
     同一行への連続した編集は1件にまとめ、変更前→最終のテキストを示す。
@@ -231,6 +234,8 @@ export const browsePageChanges = async (args: string[]): Promise<void> => {
   if (latestTitle !== undefined) {
     const newUrl = `${origin}/${projectName}/${encodeTitleForUrl(latestTitle)}`;
     meta.push(`- 新URL: ${newUrl}`);
+    const newReadableLink = `${origin}/${projectName}/${encodeTitleForReadableLink(latestTitle)}`;
+    meta.push(`- 新Readable link: ${newReadableLink}`);
   }
   sections.push(meta.join('\n'));
 

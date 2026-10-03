@@ -1,4 +1,7 @@
-import { encodeTitleForUrl } from '../lib/encodeTitle.ts';
+import {
+  encodeTitleForReadableLink,
+  encodeTitleForUrl
+} from '../lib/encodeTitle.ts';
 import { parseProjectUrlStrict } from '../lib/parseUrl.ts';
 import { requestJson } from '../lib/request.ts';
 import { resolveCredential } from '../lib/settings.ts';
@@ -19,10 +22,11 @@ Usage:
   commitId: <生成されたcommitのID>
   title:    <実際に書き込まれたpage title>
   url:      <作成または更新された page の URL。タイトルはパーセントエンコード済み>
+  readableLink: <同じ page の URL。日本語等を生で残す（Cosenseの「Copy readable link」相当）>
 
-  url はサーバーが返す title から再構築される。 同名ページが既に存在する場合、 サーバーは
-  タイトルに auto-suffix を付ける (新規作成でも既存ページのタイトル変更でも起きる)。
-  title/url にはその suffix が反映される。
+  url と readableLink はサーバーが返す title から再構築される。 同名ページが既に存在する場合、
+  サーバーはタイトルに auto-suffix を付ける (新規作成でも既存ページのタイトル変更でも起きる)。
+  title/url/readableLink にはその suffix が反映される。
 
   既存ページのタイトルが変わった編集では、続けて以下を出力する:
   titleChanged: "<変更前title>" -> "<変更後title>"
@@ -89,8 +93,9 @@ export const submitEdit = async (args: string[]): Promise<void> => {
     );
   }
   const url = `${origin}/${projectName}/${encodeTitleForUrl(title)}`;
+  const readableLink = `${origin}/${projectName}/${encodeTitleForReadableLink(title)}`;
   process.stdout.write(
-    `commitId: ${response.commitId}\ntitle:    ${title}\nurl:      ${url}\n`
+    `commitId: ${response.commitId}\ntitle:    ${title}\nurl:      ${url}\nreadableLink: ${readableLink}\n`
   );
 
   // titleChangedはサーバーが対応している場合のみ返る
