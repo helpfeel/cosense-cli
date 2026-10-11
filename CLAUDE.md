@@ -14,27 +14,12 @@ cosense skillやCLIはこのリポジトリ内にある方を使う
 
 ### SkillのE2Eテスト時
 
-- Agent SkillのE2Eテスト手順: `docs/guidelines/skill-e2e-testing.md`
-  - subagentにskillの手順書だけでワークフローを完遂させ、その不備を検証する方法
-
-### pull requestの作成・更新・レビュー時
-
-- PR作成とレビューの手順: `docs/guidelines/pull-request-and-review.md`
-  - draft運用、対話コンテキストのexport、インラインレビューコメントの草稿、sanity-review
+- Agent SkillのE2Eテストでこのリポジトリに固有の事: `docs/guidelines/skill-e2e-testing.md`
+  - 使わせるskillとCLI、テスト環境、修正先の切り分け、最終状態の確認方法
 
 # AIが作業をする際の重要なルール
 
-コード変更後の基本フロー:
-
-1. 変更が一段落したらbug確認
-2. formatterを実行
-3. linterを実行
-4. 必要に応じてcommit（ただしmainには直接commitしない）
-5. pushはユーザーの明示的な指示を待つ
-6. PR作成を指示されたらdraftで作成し、対話コンテキストをexport
-7. sanity-reviewはユーザーの指示を待ち、指摘対応をpushしてからready for review
-
-各手順の詳細は以下のセクションを参照。6・7の手順は `docs/guidelines/pull-request-and-review.md` に従う。
+Claude Codeでユーザーがソフトウェア開発を始めた時にsoftware-factory-mode skillが呼び出されていなければ、「software-factory-mode skillを使う場合は、skillを呼び出してください」とユーザーに伝える。
 
 ## Gitの使い方
 
@@ -59,7 +44,6 @@ git branch --show-current
 ### pushはユーザーの明示的な指示を待つ
 
 commit済みの変更をpushする前に、ユーザーの明示的な指示を待つ。
-作成済みのPRがあるbranchにpushしたら、`docs/guidelines/pull-request-and-review.md` に従って対話コンテキストをexportする。
 
 ## コードのformatting・linting
 
@@ -80,14 +64,6 @@ npm run lint
 コード品質を保ち、追加のformatting commitを防ぐ。
 コードの問題をチェックし、変更したファイルがプロジェクトのコーディング規約を満たしていることを確認する。
 
-## 変更が一段落したらやること
+## pull request
 
-### bugがないか確認する
-
-codex-consultation スキルでよく相談し、実装内容を確認する。
-単純なbugであれば修正する。解決方法が複数ある場合はユーザーに質問する。
-
-### Codex CLIが使えない場合
-
-Codex CLIが無い環境（Claude Code on the web等）では、subagent-consultation スキルにフォールバックし、報告にその旨を明記する。
-Codexが利用制限や通信障害等で使えなくなった時はフォールバックせず、ユーザーに報告して判断を仰ぐ。
+draftからready for reviewに切り替える時に、please reviewラベルを付ける。

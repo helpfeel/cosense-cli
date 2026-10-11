@@ -10,6 +10,9 @@
     "subagent-consultation@shokai-agent-skills": true,
     "sanity-review@shokai-agent-skills": true,
     "conversation-context@shokai-agent-skills": true,
-    "library-update-review@shokai-agent-skills": true
+    "library-update-review@shokai-agent-skills": true,
+    "software-factory-mode@shokai-agent-skills": true,
+    "kuden@shokai-agent-skills": true,
+    "skill-usability-test@shokai-agent-skills": true
   }
 }

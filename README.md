@@ -46,7 +46,6 @@ cosense --help
 - install [direnv](https://direnv.net/)
 - run `npm install`
 - install [Codex CLI](https://github.com/openai/codex) and run `codex login`
-  - modelは `gpt-5.6-sol`、reasoning effortは `high` 以上を推奨
 - run `claude` or `codex`
 
 Claude Codeでこのディレクトリをtrustすると、開発フローで使うpluginが `.claude/settings.json` によりインストールされる。
