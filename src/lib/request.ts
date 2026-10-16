@@ -5,6 +5,11 @@ import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { Credential } from './settings.ts';
 
+const describeCredentialDenied = (credential: Credential): string =>
+  credential.type === 'serviceAccount'
+    ? 'Service Account key was sent, but the server denied access. Check that the key belongs to the project of the target resource and that this operation is allowed.'
+    : 'Personal Access Token was sent, but the server denied access. Check that the account has permission for the target resource and this operation.';
+
 export class HttpError extends Error {
   readonly status: number;
   readonly statusText: string;
@@ -16,9 +21,13 @@ export class HttpError extends Error {
     statusText: string;
     url: string;
     body: string;
+    credential?: Credential;
   }) {
     let message = `HTTP ${params.status} ${params.statusText}\n${params.url}\n${params.body.slice(0, 500)}`;
-    if (params.status === 401 || params.status === 403) {
+    if (params.status === 403 && params.credential) {
+      // credential付きの403はtokenの入れ直しでは直らないので、login案内ではなく権限の確認を促す
+      message += `\n\n${describeCredentialDenied(params.credential)}`;
+    } else if (params.status === 401 || params.status === 403) {
       let origin: string | undefined;
       try {
         origin = new URL(params.url).origin;
@@ -76,7 +85,8 @@ export const requestJson = async (
       status: res.status,
       statusText: res.statusText,
       url,
-      body
+      body,
+      credential: options?.credential
     });
   }
   return res.json();
@@ -129,7 +139,8 @@ export const downloadToFile = async (
       status: res.status,
       statusText: res.statusText,
       url,
-      body
+      body,
+      credential: options?.credential
     });
   }
   if (!res.body) {

@@ -30,9 +30,6 @@ Usage:
 HTTPエラー:
   401/403: 認証・権限が無い。private projectのファイルはproject member権限が必要
   404: fileIdに対応するファイルが存在しない
-
-注記:
-  動画ファイルはサーバー側の制限により取得できない場合がある
 `;
 
 interface ParsedArgs {

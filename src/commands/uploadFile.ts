@@ -76,8 +76,8 @@ const parseArgs = (args: string[]): ParsedArgs => {
   };
 };
 
-// request.tsのHttpErrorは401/403でcosense loginを案内するが、GCSのsigned URLへの
-// PUT失敗にログイン案内は誤誘導なので専用のエラーメッセージを組み立てる
+// request.tsのHttpErrorは401/403でcosense loginか権限の確認を案内するが、GCSのsigned URLへの
+// PUT失敗にはどちらも誤誘導なので専用のエラーメッセージを組み立てる
 const uploadToSignedUrl = async (
   url: string,
   body: Uint8Array,
