@@ -1,3 +1,4 @@
+import { isEquivalentOrigin } from './parseUrl.ts';
 import { requestJson } from './request.ts';
 import type { Credential } from './settings.ts';
 
@@ -107,13 +108,13 @@ export const fetchFileMarkups = async (
   const gyazos = collectMatches(lines, GYAZO_URL_PATTERN);
   const markups = new Map<string, string>();
 
-  // ページと同じhostのアップロードファイルだけタグ展開する。cross-originのURLに
+  // ページと同一視できるoriginのアップロードファイルだけタグ展開する。cross-originのURLに
   // ページのcredential（env COSENSE_PATを含む）を送るとPAT漏洩になるため、別host・
   // 不正URL・取得失敗（404・権限なし・非公開Gyazo等）はいずれもURLのまま本文に残す。
   // 従来の出力と同じに劣化するだけで、AIはURLからファイルの存在を認知できる
   const fileTasks = [...files].map(async ([url, fileId]) => {
     try {
-      if (new URL(url).origin !== pageOrigin) return;
+      if (!isEquivalentOrigin(url, pageOrigin)) return;
       const info = (await requestJson(`${pageOrigin}/api/gcs/${fileId}/info`, {
         credential: pageCredential
       })) as FileInfo;

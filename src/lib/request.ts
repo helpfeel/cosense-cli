@@ -3,6 +3,7 @@ import { rename, rm, stat } from 'node:fs/promises';
 import { basename, dirname, join, resolve } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { isEquivalentOrigin } from './parseUrl.ts';
 import type { Credential } from './settings.ts';
 
 const describeCredentialDenied = (credential: Credential): string =>
@@ -67,29 +68,74 @@ const buildCredentialHeaders = (
   return headers;
 };
 
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+const MAX_REDIRECTS = 5;
+
 export const requestJson = async (
   url: string,
   options?: RequestOptions
 ): Promise<unknown> => {
   const headers = buildCredentialHeaders(options?.credential);
   const method = options?.method ?? 'GET';
-  const init: RequestInit = { method, headers };
+  // Node.jsのfetchは別originへのredirectでもこの独自credential headerを転送するので、自動redirectにしない
+  const init: RequestInit = { method, headers, redirect: 'manual' };
   if (options?.body !== undefined) {
     headers['Content-Type'] = 'application/json';
     init.body = JSON.stringify(options.body);
   }
-  const res = await fetch(url, init);
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new HttpError({
-      status: res.status,
-      statusText: res.statusText,
-      url,
-      body,
-      credential: options?.credential
-    });
+  const requestUrl = new URL(url);
+  let currentUrl = url;
+  for (let redirects = 0; ; redirects++) {
+    const res = await fetch(currentUrl, init);
+    if (!REDIRECT_STATUSES.has(res.status)) {
+      if (!res.ok) {
+        const body = await res.text().catch(() => '');
+        throw new HttpError({
+          status: res.status,
+          statusText: res.statusText,
+          url: currentUrl,
+          body,
+          credential: options?.credential
+        });
+      }
+      return res.json();
+    }
+    const location = res.headers.get('location');
+    await res.body?.cancel().catch(() => {});
+    if (!location) {
+      throw new Error(
+        `HTTP ${res.status} without Location header: ${currentUrl}`
+      );
+    }
+    const redirectUrl = URL.parse(location, currentUrl);
+    if (!redirectUrl) {
+      throw new Error(
+        `HTTP ${res.status} with invalid Location header: ${currentUrl}`
+      );
+    }
+    if (redirectUrl.protocol !== 'http:' && redirectUrl.protocol !== 'https:') {
+      throw new Error(
+        `HTTP ${res.status} redirect to ${redirectUrl.protocol} URL was not followed: ${currentUrl}`
+      );
+    }
+    if (!isEquivalentOrigin(requestUrl, redirectUrl)) {
+      throw new Error(
+        `HTTP ${res.status} redirect to ${redirectUrl.origin}${redirectUrl.pathname} was not followed because it leaves ${requestUrl.origin}. ` +
+          `Retry with URLs on ${redirectUrl.origin}.`
+      );
+    }
+    // GETだけ追うのは、ページ改名の追従(followRename)が改名後のAPI URLへの302で返るため
+    if (method !== 'GET') {
+      throw new Error(
+        `HTTP ${res.status} redirect of ${method} ${currentUrl} is not followed.`
+      );
+    }
+    if (redirects >= MAX_REDIRECTS) {
+      throw new Error(`Too many redirects: ${url}`);
+    }
+    currentUrl = redirectUrl.href;
   }
-  return res.json();
 };
 
 export interface DownloadResult {
@@ -97,8 +143,6 @@ export interface DownloadResult {
   contentType: string | null;
   size: number;
 }
-
-const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
 
 export const downloadToFile = async (
   url: string,

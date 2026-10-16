@@ -20,6 +20,26 @@ export const parseOrigin = (input: string): string => {
   return url.origin;
 };
 
+// scrapbox.ioとcosen.seはドメイン移行中の同じCosenseで、どちらのURLも同じサーバーに届くのでcredentialを共有してよい
+const EQUIVALENT_HOSTS = new Set(['scrapbox.io', 'cosen.se']);
+
+// http(s)のURL同士で、credentialを共有してよいoriginかを判定する
+export const isEquivalentOrigin = (
+  a: URL | string,
+  b: URL | string
+): boolean => {
+  const from = new URL(a);
+  const to = new URL(b);
+  if (from.protocol !== 'http:' && from.protocol !== 'https:') return false;
+  return (
+    from.protocol === to.protocol &&
+    from.port === to.port &&
+    (from.hostname === to.hostname ||
+      (EQUIVALENT_HOSTS.has(from.hostname) &&
+        EQUIVALENT_HOSTS.has(to.hostname)))
+  );
+};
+
 export const parseProjectUrl = (input: string): ProjectUrl => {
   const u = new URL(input);
   const parts = u.pathname.split('/').filter(Boolean);

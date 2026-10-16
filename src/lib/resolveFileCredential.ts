@@ -1,4 +1,4 @@
-import { parseProjectUrlStrict } from './parseUrl.ts';
+import { isEquivalentOrigin, parseProjectUrlStrict } from './parseUrl.ts';
 import {
   resolveCredential,
   resolveUserCredential,
@@ -15,7 +15,7 @@ export const resolveFileCredential = (
     return resolveUserCredential(fileOrigin);
   }
   const { origin, projectName } = parseProjectUrlStrict(projectUrl);
-  if (origin !== fileOrigin) {
+  if (!isEquivalentOrigin(origin, fileOrigin)) {
     throw new Error(
       `--project origin mismatch: ${origin} (--project) vs ${fileOrigin} (file URL)`
     );

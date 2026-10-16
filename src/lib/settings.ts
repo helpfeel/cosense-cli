@@ -1,6 +1,7 @@
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { isEquivalentOrigin } from './parseUrl.ts';
 
 interface ProjectSetting {
   origin: string;
@@ -204,7 +205,7 @@ export const writeUserToken = (origin: string, token: string): void => {
     const url = (entry as { url?: unknown }).url;
     if (typeof url !== 'string') return true;
     try {
-      return new URL(url).origin !== origin;
+      return !isEquivalentOrigin(url, origin);
     } catch {
       return true;
     }
@@ -233,7 +234,8 @@ export const writeProjectServiceAccount = (
       const existingName = parsed.pathname.split('/').filter(Boolean)[0];
       if (!existingName) return true;
       return !(
-        parsed.origin === origin && existingName.toLowerCase() === projectNameLc
+        isEquivalentOrigin(parsed, origin) &&
+        existingName.toLowerCase() === projectNameLc
       );
     } catch {
       return true;
@@ -264,12 +266,15 @@ export const resolveCredential = (
   if (!settings) return undefined;
   const projectNameLc = projectName.toLowerCase();
   for (const project of settings.projects) {
-    if (project.origin === origin && project.projectNameLc === projectNameLc) {
+    if (
+      isEquivalentOrigin(project.origin, origin) &&
+      project.projectNameLc === projectNameLc
+    ) {
       return { type: 'serviceAccount', value: project.serviceAccount };
     }
   }
   for (const user of settings.users) {
-    if (user.origin === origin) {
+    if (isEquivalentOrigin(user.origin, origin)) {
       return { type: 'personalAccessToken', value: user.token };
     }
   }
@@ -284,7 +289,7 @@ export const resolveUserCredential = (
   const settings = loadSettings();
   if (!settings) return undefined;
   for (const user of settings.users) {
-    if (user.origin === origin) {
+    if (isEquivalentOrigin(user.origin, origin)) {
       return { type: 'personalAccessToken', value: user.token };
     }
   }
