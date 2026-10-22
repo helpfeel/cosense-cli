@@ -10,7 +10,7 @@ import {
   serviceAccountSuffix,
   type UserMap
 } from '../lib/resolveUsers.ts';
-import { resolveCredential } from '../lib/settings.ts';
+import { resolveCredential, type Credential } from '../lib/settings.ts';
 
 export const browsePageChangesSummary =
   'ページの編集履歴(commit)をpageId起点で取得し、誰がいつ何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する';
@@ -58,6 +58,7 @@ interface Change {
 
 interface Commit {
   id?: string;
+  parentId?: string | null;
   changes?: Change[];
   userId?: string;
   created?: number;
@@ -65,6 +66,7 @@ interface Commit {
 
 interface CommitsResponse {
   commits?: Commit[];
+  hasMore?: boolean;
 }
 
 interface ParsedArgs {
@@ -115,6 +117,46 @@ const resolveUserName = (
 };
 
 const quote = (text: string | undefined): string => `「${text ?? ''}」`;
+
+// 1回の応答は件数と大きさで打ち切られ、続きがある時はhasMoreが真になる
+const fetchAllCommits = async (
+  apiUrl: string,
+  since: string | undefined,
+  credential: Credential | undefined
+): Promise<Commit[]> => {
+  const commits: Commit[] = [];
+  let head = since;
+  let continuing = false;
+  const requestedHeads = new Set<string>(since ? [since] : []);
+  while (true) {
+    const url = head ? `${apiUrl}?head=${encodeURIComponent(head)}` : apiUrl;
+    const data = (await requestJson(url, { credential })) as CommitsResponse;
+    const batch = data.commits ?? [];
+    const first = batch[0];
+    // 続きが空だと、取れた分を完全な結果として出してしまうので止める。hasMoreは次の要求が空でない事まで保証しない
+    if (continuing && !first) {
+      throw new Error(`no commits follow head "${head}"`);
+    }
+    // headに続かない応答を辿ると、同じ応答を取り続けて終わらないので止める
+    if (head && first && first.parentId !== head) {
+      throw new Error(`commits do not follow head "${head}"`);
+    }
+    // spreadで足すと、1回の応答が大きい時に引数の上限を超える
+    for (const commit of batch) commits.push(commit);
+    if (!data.hasMore) return commits;
+    const next = batch.at(-1)?.id;
+    if (!next) {
+      throw new Error('hasMore is true but the last commit has no id');
+    }
+    // 親子が循環した応答はparentIdの確認を通るので、同じheadを2度要求しない事で止める
+    if (requestedHeads.has(next)) {
+      throw new Error(`commit "${next}" appears again as head`);
+    }
+    requestedHeads.add(next);
+    head = next;
+    continuing = true;
+  }
+};
 
 // 時系列の変更イベント。同一行への連続updateは1件に畳む
 type ChangeEvent =
@@ -205,18 +247,14 @@ export const browsePageChanges = async (args: string[]): Promise<void> => {
   const { projectUrl, pageId, since } = parseArgs(args);
   const { origin, projectName } = parseProjectUrlStrict(projectUrl);
 
-  let apiUrl = `${origin}/api/commits/${projectName}/${pageId}`;
-  if (since) {
-    apiUrl += `?head=${encodeURIComponent(since)}`;
-  }
+  const apiUrl = `${origin}/api/commits/${projectName}/${pageId}`;
   const credential = resolveCredential(origin, projectName);
 
-  const [data, userMap] = await Promise.all([
-    requestJson(apiUrl, { credential }) as Promise<CommitsResponse>,
+  const [commits, userMap] = await Promise.all([
+    fetchAllCommits(apiUrl, since, credential),
     fetchUserMap(origin, projectName)
   ]);
 
-  const commits = data.commits ?? [];
   const events = buildEvents(commits);
 
   const titleEvents = events.filter(e => e.kind === 'title');
