@@ -13,20 +13,25 @@ import {
 import { resolveCredential, type Credential } from '../lib/settings.ts';
 
 export const browsePageChangesSummary =
-  'ページの編集履歴(commit)をpageId起点で取得し、誰がいつ何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する';
+  'ページの最近の編集履歴(commit)をpageId起点で取得し、誰がいつ何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する';
 
-export const browsePageChangesHelp = `browsePageChanges - ページの編集履歴(commit)をpageId起点で取得し自然言語で説明する
+export const browsePageChangesHelp = `browsePageChanges - ページの最近の編集履歴(commit)をpageId起点で取得し自然言語で説明する
 
 Usage:
-  cosense browsePageChanges <projectUrl> <pageId> [--since <commitId>]
+  cosense browsePageChanges <projectUrl> <pageId> [--since <commitId> | [--before <commitId>] [--all]]
 
 引数:
-  <projectUrl>       プロジェクトのURL（例: https://scrapbox.io/shokai）
-  <pageId>           ページの不変ID。browsePage / readPage の出力に含まれる
-  --since <commitId> 指定した commitId より後の変更だけを対象にする（カーソル）。
-                     browsePage / readPage 出力の commitId を控えておき、それを渡すと
-                     「前回読んだ後に何が変わったか」だけを取得できる。
-                     省略すると全履歴を対象にする。
+  <projectUrl>        プロジェクトのURL（例: https://scrapbox.io/shokai）
+  <pageId>            ページの不変ID。browsePage / readPage の出力に含まれる
+  --since <commitId>  指定した commitId より後の変更だけを対象にする（カーソル）。
+                      browsePage / readPage 出力の commitId を控えておき、それを渡すと
+                      「前回読んだ後に何が変わったか」だけを取得できる。
+  --before <commitId> 指定した commitId より前の変更を、新しい方から最大100件対象にする。
+                      前回の出力の「さらに前の変更を読むコマンド」をそのまま実行すると続きを読める。
+  --all               保持中の全履歴を対象にする。履歴の長いページでは要求が何回にも分かれる。
+                      --before と併用すると、その commitId より前の全履歴になる。
+  どれも省略すると、最新の変更を新しい方から最大100件対象にする。
+  --since は --before / --all と併用できない。
 
 なぜpageId起点か:
   ページタイトルはURLになるため、共同編集者がタイトルを変更すると旧タイトルでは読めなくなる。
@@ -34,8 +39,11 @@ Usage:
 
 出力形式（Markdown plain text。JSONではない）:
   # ページ変更履歴
-    pageId / 範囲（--since より後か全履歴か）/ commit数 / title change（変更後タイトル、無ければ なし）
-    タイトルが変わっていた時のみ、新URLと新Readable linkも出力する
+    pageId / 範囲 / commit数 / title change（範囲内の最後の変更後タイトル、無ければ なし）
+    範囲外のタイトル変更は検出しないので、無しでもリネーム済みの事がある。
+    範囲が最新の変更を含む時（--before 無し）は、タイトルが変わっていれば新URLと新Readable linkも出力する。
+    --before 付きの title change は当時のタイトルで、現在のタイトルとは限らないのでURLは出さない。
+    既定と --before（--all 無し）で範囲より前にも変更がある時は「さらに前の変更を読むコマンド」に、続きを読む完全なコマンドを示す
   ## 変更
     時系列の変更イベントを「<日時>\t<誰>が<何を>」の形（TAB区切り）で列挙する。
     同一行への連続した編集は1件にまとめ、変更前→最終のテキストを示す。
@@ -73,22 +81,32 @@ interface ParsedArgs {
   projectUrl: string;
   pageId: string;
   since: string | undefined;
+  before: string | undefined;
+  all: boolean;
 }
 
 const parseArgs = (args: string[]): ParsedArgs => {
   const usage =
-    'Usage: cosense browsePageChanges <projectUrl> <pageId> [--since <commitId>]';
+    'Usage: cosense browsePageChanges <projectUrl> <pageId> [--since <commitId> | [--before <commitId>] [--all]]';
   let since: string | undefined;
+  let before: string | undefined;
+  let all = false;
   const positional: string[] = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i] as string;
-    if (arg === '--since') {
+    if (arg === '--since' || arg === '--before') {
       const value = args[i + 1];
       if (value === undefined || value.startsWith('--')) {
-        throw new Error(`--since requires a commitId\n${usage}`);
+        throw new Error(`${arg} requires a commitId\n${usage}`);
       }
-      since = value;
+      if (arg === '--since') {
+        since = value;
+      } else {
+        before = value;
+      }
       i += 1;
+    } else if (arg === '--all') {
+      all = true;
     } else if (arg.startsWith('--')) {
       throw new Error(`Unknown option: ${arg}\n${usage}`);
     } else {
@@ -98,10 +116,15 @@ const parseArgs = (args: string[]): ParsedArgs => {
   if (positional.length !== 2) {
     throw new Error(usage);
   }
+  if (since !== undefined && (before !== undefined || all)) {
+    throw new Error(`--since cannot be used with --before or --all\n${usage}`);
+  }
   return {
     projectUrl: positional[0] as string,
     pageId: positional[1] as string,
-    since
+    since,
+    before,
+    all
   };
 };
 
@@ -119,17 +142,18 @@ const resolveUserName = (
 const quote = (text: string | undefined): string => `「${text ?? ''}」`;
 
 // 1回の応答は件数と大きさで打ち切られ、続きがある時はhasMoreが真になる
-const fetchAllCommits = async (
+// headより後のcommitを古い順に、headを最後のcommitに付け替えて全部取る
+const fetchCommitsAfter = async (
   apiUrl: string,
-  since: string | undefined,
+  since: string,
   credential: Credential | undefined
 ): Promise<Commit[]> => {
   const commits: Commit[] = [];
   let head = since;
   let continuing = false;
-  const requestedHeads = new Set<string>(since ? [since] : []);
+  const requestedHeads = new Set<string>([since]);
   while (true) {
-    const url = head ? `${apiUrl}?head=${encodeURIComponent(head)}` : apiUrl;
+    const url = `${apiUrl}?head=${encodeURIComponent(head)}`;
     const data = (await requestJson(url, { credential })) as CommitsResponse;
     const batch = data.commits ?? [];
     const first = batch[0];
@@ -138,7 +162,7 @@ const fetchAllCommits = async (
       throw new Error(`no commits follow head "${head}"`);
     }
     // headに続かない応答を辿ると、同じ応答を取り続けて終わらないので止める
-    if (head && first && first.parentId !== head) {
+    if (first && first.parentId !== head) {
       throw new Error(`commits do not follow head "${head}"`);
     }
     // spreadで足すと、1回の応答が大きい時に引数の上限を超える
@@ -155,6 +179,56 @@ const fetchAllCommits = async (
     requestedHeads.add(next);
     head = next;
     continuing = true;
+  }
+};
+
+// 最新のcommit(beforeがあればその親)から親を辿った新しい順の応答を、allなら全部、でなければ1回分だけ取る
+// olderCommitIdは、取った範囲より前に変更が残っている時の、続きを取るbefore
+const fetchCommitsBefore = async (
+  apiUrl: string,
+  { before, all }: { before: string | undefined; all: boolean },
+  credential: Credential | undefined
+): Promise<{ commits: Commit[]; olderCommitId: string | undefined }> => {
+  const commits: Commit[] = [];
+  let cursor = before;
+  // 前の応答の最後のcommitの親。続きの応答の先頭はこれでなければならない
+  let expectedFirstId: string | null | undefined;
+  const requestedCursors = new Set<string>(before ? [before] : []);
+  while (true) {
+    const url = cursor
+      ? `${apiUrl}?before=${encodeURIComponent(cursor)}`
+      : apiUrl;
+    const data = (await requestJson(url, { credential })) as CommitsResponse;
+    const batch = data.commits ?? [];
+    const first = batch[0];
+    // 古いserverはhead無しの応答を古い順に返す。隣り合う2件の親子の向きで見分け、古い100件を最新として出さない
+    const second = batch[1];
+    if (first && second && second.parentId === first.id) {
+      throw new Error(
+        'the server returned commits from the oldest. This version of cosense-cli needs a server that returns them from the latest'
+      );
+    }
+    if (expectedFirstId !== undefined) {
+      if (!first) {
+        throw new Error(`no commits precede "${cursor}"`);
+      }
+      if (first.id !== expectedFirstId) {
+        throw new Error(`commits do not precede "${cursor}"`);
+      }
+    }
+    for (const commit of batch) commits.push(commit);
+    const last = batch.at(-1);
+    if (!data.hasMore) return { commits, olderCommitId: undefined };
+    if (!last?.id) {
+      throw new Error('hasMore is true but the last commit has no id');
+    }
+    if (!all) return { commits, olderCommitId: last.id };
+    if (requestedCursors.has(last.id)) {
+      throw new Error(`commit "${last.id}" appears again as before`);
+    }
+    requestedCursors.add(last.id);
+    cursor = last.id;
+    expectedFirstId = last.parentId ?? null;
   }
 };
 
@@ -243,15 +317,45 @@ const renderEvent = (event: ChangeEvent, userMap: UserMap): string => {
   }
 };
 
+const fetchCommits = async (
+  apiUrl: string,
+  { since, before, all }: Pick<ParsedArgs, 'since' | 'before' | 'all'>,
+  credential: Credential | undefined
+): Promise<{ commits: Commit[]; olderCommitId: string | undefined }> => {
+  if (since !== undefined) {
+    const commits = await fetchCommitsAfter(apiUrl, since, credential);
+    return { commits, olderCommitId: undefined };
+  }
+  const { commits, olderCommitId } = await fetchCommitsBefore(
+    apiUrl,
+    { before, all },
+    credential
+  );
+  // 新しい順の応答を時系列に戻す。同一行への連続updateの畳み方が順序に依存する
+  commits.reverse();
+  return { commits, olderCommitId };
+};
+
+const describeRange = (
+  { since, before, all }: Pick<ParsedArgs, 'since' | 'before' | 'all'>,
+  count: number
+): string => {
+  if (since !== undefined) return `commit ${since} より後`;
+  if (all && before !== undefined) return `commit ${before} より前の全履歴`;
+  if (all) return '全履歴';
+  if (before !== undefined) return `commit ${before} より前 ${count}件`;
+  return `最新 ${count}件`;
+};
+
 export const browsePageChanges = async (args: string[]): Promise<void> => {
-  const { projectUrl, pageId, since } = parseArgs(args);
+  const { projectUrl, pageId, since, before, all } = parseArgs(args);
   const { origin, projectName } = parseProjectUrlStrict(projectUrl);
 
   const apiUrl = `${origin}/api/commits/${projectName}/${pageId}`;
   const credential = resolveCredential(origin, projectName);
 
-  const [commits, userMap] = await Promise.all([
-    fetchAllCommits(apiUrl, since, credential),
+  const [{ commits, olderCommitId }, userMap] = await Promise.all([
+    fetchCommits(apiUrl, { since, before, all }, credential),
     fetchUserMap(origin, projectName)
   ]);
 
@@ -264,12 +368,18 @@ export const browsePageChanges = async (args: string[]): Promise<void> => {
 
   const meta: string[] = [
     `- pageId: ${pageId}`,
-    `- 範囲: ${since ? `commit ${since} より後` : '全履歴'}`,
+    `- 範囲: ${describeRange({ since, before, all }, commits.length)}`,
     `- commit数: ${commits.length}`,
     `- title change: ${latestTitle !== undefined ? quote(latestTitle) : 'なし'}`
   ];
+  if (olderCommitId !== undefined) {
+    meta.push(
+      `- さらに前の変更を読むコマンド: cosense browsePageChanges ${origin}/${projectName} ${pageId} --before ${olderCommitId}`
+    );
+  }
   // タイトルが変わっていればURLも変わっている。新URLを添える
-  if (latestTitle !== undefined) {
+  // --before 付きの範囲のタイトルは当時の物で、その後に変わっている事があるのでURLにしない
+  if (latestTitle !== undefined && before === undefined) {
     const newUrl = `${origin}/${projectName}/${encodeTitleForUrl(latestTitle)}`;
     meta.push(`- 新URL: ${newUrl}`);
     const newReadableLink = `${origin}/${projectName}/${encodeTitleForReadableLink(latestTitle)}`;
