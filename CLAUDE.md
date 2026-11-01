@@ -66,4 +66,13 @@ npm run lint
 
 ## pull request
 
+### ラベルでレビューの状態を表す
+
 draftからready for reviewに切り替える時に、please reviewラベルを付ける。
+mergeされたら、please reviewラベルを外してship itラベルを付ける。
+
+### 作業ページとDev Sprintに状態を反映する
+
+開発作業に着手した時と、pull requestや作業ページの状態が変わる時に、次のページを読み、それに従う。
+
+https://scrapbox.io/Nota/pull_requestの状態を作業ページとDev_Sprintに反映する作法
