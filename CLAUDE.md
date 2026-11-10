@@ -27,24 +27,6 @@ Claude Codeでユーザーがソフトウェア開発を始めた時にsoftware-
 
 main worktreeからコピーするか、`npm ci` を実行する。
 
-### mainブランチにcommitしない
-
-commit前に現在のbranchを確認する。
-
-```
-git branch --show-current
-```
-
-`main` branchの場合はcommitせず停止し、変更内容に基づいた適切なbranch名を提案してユーザーに確認する
-
-### 履歴を書き換える操作は勝手にやらない
-
-`git commit --amend` やreflogを使った巻き戻しなど、commit済みの履歴を書き換える操作は勝手に行わない。必要だと判断した場合は、実行前にユーザーに提案して指示を仰ぐ。
-
-### pushはユーザーの明示的な指示を待つ
-
-commit済みの変更をpushする前に、ユーザーの明示的な指示を待つ。
-
 ## コードのformatting・linting
 
 ### コード変更後、oxfmtを実行すること
