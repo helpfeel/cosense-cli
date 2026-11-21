@@ -23,10 +23,20 @@ import {
   deleteFileSummary
 } from './commands/deleteFile.ts';
 import {
+  downloadCodeBlock,
+  downloadCodeBlockHelp,
+  downloadCodeBlockSummary
+} from './commands/downloadCodeBlock.ts';
+import {
   downloadFile,
   downloadFileHelp,
   downloadFileSummary
 } from './commands/downloadFile.ts';
+import {
+  downloadTable,
+  downloadTableHelp,
+  downloadTableSummary
+} from './commands/downloadTable.ts';
 import {
   list1hopLinks,
   list1hopLinksHelp,
@@ -163,6 +173,16 @@ const commands: Record<string, CommandSpec> = {
     handler: readPageSnapshot,
     summary: readPageSnapshotSummary,
     help: readPageSnapshotHelp
+  },
+  downloadCodeBlock: {
+    handler: downloadCodeBlock,
+    summary: downloadCodeBlockSummary,
+    help: downloadCodeBlockHelp
+  },
+  downloadTable: {
+    handler: downloadTable,
+    summary: downloadTableSummary,
+    help: downloadTableHelp
   },
   readFileInfo: {
     handler: readFileInfo,

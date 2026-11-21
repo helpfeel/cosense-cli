@@ -1,3 +1,4 @@
+import { listBlockFiles, renderBlockFiles } from '../lib/blocks.ts';
 import { enrichTimestampsOf } from '../lib/enrichTimestamps.ts';
 import {
   encodeTitleForReadableLink,
@@ -23,9 +24,9 @@ import {
 import { resolveCredential } from '../lib/settings.ts';
 
 export const browsePageSummary =
-  '単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする';
+  '単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+コードブロック・テーブルのURL+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする';
 
-export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+本文をAIが読みやすい形式で出力する。行permalink (#<lineId>) 付きなら該当行をマークする
+export const browsePageHelp = `browsePage - 単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+コードブロック・テーブルのURL+本文をAIが読みやすい形式で出力する。行permalink (#<lineId>) 付きなら該当行をマークする
 
 Usage:
   cosense browsePage <pageUrl>
@@ -59,6 +60,14 @@ Usage:
     このページ本文から抜き出された Infobox を出力する。各 Infobox を ### <title> の
     見出しと  - キー: 値  の箇条書きで表す。値はCosense記法のまま。
     hallucination または truncated と判定された Infobox は除外する。
+    0件の場合はセクションごと省略
+
+  ## コードブロック・テーブル
+    本文中のコードブロック記法 (code:<ファイル名>) とテーブル記法 (table:<テーブル名>) が
+    配信するファイルを、 - code:<ファイル名> (Nブロック)  または  - table:<テーブル名> (Nブロック)
+    と、次の行のURLで列挙する。同じ名前のブロックは上から順に連結されて1つのファイルに
+    なるので、1件にまとめる。URLを cosense downloadCodeBlock または cosense downloadTable に
+    渡すと、そのファイルを保存できる。
     0件の場合はセクションごと省略
 
   ## 本文
@@ -96,7 +105,7 @@ Usage:
     ## 1 hop link（表に載っていないページ） に出力する
 
 persistent: false の時:
-  アイコン・テロメア・Infoboxは省略し、メタデータはURLとReadable linkだけを出力する。
+  アイコン・テロメア・Infobox・コードブロック・テーブルは省略し、メタデータはURLとReadable linkだけを出力する。
   (このページはまだ作成されていません) と 本文（テンプレート）と Related Pages を出力する
 
 URLに #<lineId> fragmentが指定された時:
@@ -436,6 +445,14 @@ export const browsePage = async (args: string[]): Promise<void> => {
 
   const infoboxSection = renderInfobox(page.infoboxResult);
   if (infoboxSection) sections.push(infoboxSection);
+
+  const blockFilesSection = renderBlockFiles(
+    listBlockFiles(
+      (page.lines ?? []).map(line => line.text ?? ''),
+      { origin, projectName, title }
+    )
+  );
+  if (blockFilesSection) sections.push(blockFilesSection);
 
   sections.push(`## 本文\n\n${body}`);
 

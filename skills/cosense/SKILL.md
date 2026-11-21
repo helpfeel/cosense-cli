@@ -85,33 +85,35 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 
 ### コマンド一覧
 
-| command            | 用途                                                                                                                                                |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| login              | Personal Access Token または Service Account を設定ファイルに保存する                                                                               |
-| whoami             | 現在の認証ユーザーの情報を取得する                                                                                                                  |
-| listProjects       | 自分が参加しているprojectの一覧を取得する                                                                                                           |
-| browsePage         | 単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする |
-| browseRelatedPages | 1-hop+2-hopの関連ページタイトル一覧をAIが読みやすい形式で出力する。infobox定義ページでは文芸的データベース(TSV表)を出力する                         |
-| browsePageChanges  | ページの最近の編集履歴(commit)をpageId起点で取得し、誰がいつ何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する                  |
-| readPage           | 単一ページを読む                                                                                                                                    |
-| readPageSnapshot   | snapshotのIDを指定してPage History上の過去の本文を読む                                                                                              |
-| readFileInfo       | ファイルのメタデータと抽出済みテキストを取得する                                                                                                    |
-| downloadFile       | ファイル本体をダウンロードしてローカルに保存する                                                                                                    |
-| uploadFile         | ファイルをprojectにアップロードして埋め込みURLを取得する                                                                                            |
-| deleteFile         | ファイルをprojectから削除する                                                                                                                       |
-| readProjectMembers | プロジェクトのメンバー一覧を取得する                                                                                                                |
-| listPages          | プロジェクトのページ一覧を取得する                                                                                                                  |
-| listPageSnapshots  | ページのsnapshot一覧(Page History)をpageId起点で取得する                                                                                            |
-| list1hopLinks      | 1-hop近傍を取得する                                                                                                                                 |
-| list2hopLinks      | 2-hop近傍を取得する                                                                                                                                 |
-| searchVector       | ベクトル検索でページを探す（タイトル+本文中リンク記法のみ対象）                                                                                     |
-| searchFullText     | 本文全文を対象に検索する                                                                                                                            |
-| search1hopLinks    | 1-hop近傍を全文検索でフィルタする                                                                                                                   |
-| search2hopLinks    | 2-hop近傍を全文検索でフィルタする                                                                                                                   |
-| previewEdit        | ページ編集opsをdry-runしてpreviewIdを取得する                                                                                                       |
-| previewDelete      | ページ削除をdry-runしてpreviewIdを取得する                                                                                                          |
-| submitEdit         | previewEdit/previewDeleteで取得したpreviewIdを使ってページ編集・削除を確定する                                                                      |
-| replaceLinks       | 旧タイトルへのリンク記法を新しいタイトルに一括置換する                                                                                              |
+| command            | 用途                                                                                                                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| login              | Personal Access Token または Service Account を設定ファイルに保存する                                                                                                             |
+| whoami             | 現在の認証ユーザーの情報を取得する                                                                                                                                                |
+| listProjects       | 自分が参加しているprojectの一覧を取得する                                                                                                                                         |
+| browsePage         | 単一ページを読む。メタデータ+アイコン記法+テロメア+Infobox+コードブロック・テーブルのURL+本文をAIが読みやすい形式で出力する。行permalink (`#<lineId>`) 付きなら該当行をマークする |
+| browseRelatedPages | 1-hop+2-hopの関連ページタイトル一覧をAIが読みやすい形式で出力する。infobox定義ページでは文芸的データベース(TSV表)を出力する                                                       |
+| browsePageChanges  | ページの最近の編集履歴(commit)をpageId起点で取得し、誰がいつ何をどう変えたかを自然言語で説明する。タイトル変更(リネーム)も検出する                                                |
+| readPage           | 単一ページを読む                                                                                                                                                                  |
+| readPageSnapshot   | snapshotのIDを指定してPage History上の過去の本文を読む                                                                                                                            |
+| downloadCodeBlock  | コードブロックをダウンロードしてローカルに保存する                                                                                                                                |
+| downloadTable      | テーブルをCSVでダウンロードしてローカルに保存する                                                                                                                                 |
+| readFileInfo       | ファイルのメタデータと抽出済みテキストを取得する                                                                                                                                  |
+| downloadFile       | ファイル本体をダウンロードしてローカルに保存する                                                                                                                                  |
+| uploadFile         | ファイルをprojectにアップロードして埋め込みURLを取得する                                                                                                                          |
+| deleteFile         | ファイルをprojectから削除する                                                                                                                                                     |
+| readProjectMembers | プロジェクトのメンバー一覧を取得する                                                                                                                                              |
+| listPages          | プロジェクトのページ一覧を取得する                                                                                                                                                |
+| listPageSnapshots  | ページのsnapshot一覧(Page History)をpageId起点で取得する                                                                                                                          |
+| list1hopLinks      | 1-hop近傍を取得する                                                                                                                                                               |
+| list2hopLinks      | 2-hop近傍を取得する                                                                                                                                                               |
+| searchVector       | ベクトル検索でページを探す（タイトル+本文中リンク記法のみ対象）                                                                                                                   |
+| searchFullText     | 本文全文を対象に検索する                                                                                                                                                          |
+| search1hopLinks    | 1-hop近傍を全文検索でフィルタする                                                                                                                                                 |
+| search2hopLinks    | 2-hop近傍を全文検索でフィルタする                                                                                                                                                 |
+| previewEdit        | ページ編集opsをdry-runしてpreviewIdを取得する                                                                                                                                     |
+| previewDelete      | ページ削除をdry-runしてpreviewIdを取得する                                                                                                                                        |
+| submitEdit         | previewEdit/previewDeleteで取得したpreviewIdを使ってページ編集・削除を確定する                                                                                                    |
+| replaceLinks       | 旧タイトルへのリンク記法を新しいタイトルに一括置換する                                                                                                                            |
 
 ### コマンドの詳細を知りたい時
 

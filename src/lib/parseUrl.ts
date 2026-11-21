@@ -89,6 +89,49 @@ export const parseFileUrl = (input: string): FileUrl => {
   return { origin: u.origin, fileId: m[1] as string };
 };
 
+export type BlockKind = 'code' | 'table';
+
+export interface BlockUrl extends ProjectUrl {
+  requestUrl: string;
+}
+
+const BLOCK_URL_FORMATS: Record<BlockKind, string> = {
+  code: 'https://<host>/api/code/<project>/<title>/<filename>',
+  table: 'https://<host>/api/table/<project>/<title>/<name>.csv'
+};
+
+const BLOCK_COMMANDS: Record<BlockKind, string> = {
+  code: 'downloadCodeBlock',
+  table: 'downloadTable'
+};
+
+export const parseBlockUrl = (input: string, kind: BlockKind): BlockUrl => {
+  const label = kind === 'code' ? 'Code block' : 'Table';
+  const u = new URL(input);
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') {
+    throw new Error(`${label} URL must use http: or https: scheme: ${input}`);
+  }
+  if (u.search || u.hash) {
+    throw new Error(`${label} URL must not have query/hash, got: ${input}`);
+  }
+  const m = u.pathname.match(/^\/api\/(code|table)\/([^/]+)\/[^/]+\/([^/]+)$/);
+  if (m && m[1] !== kind) {
+    throw new Error(
+      `This is a ${m[1]} URL. Use \`cosense ${BLOCK_COMMANDS[m[1] as BlockKind]}\` instead: ${input}`
+    );
+  }
+  if (!m || (kind === 'table' && !/.\.csv$/.test(m[3] as string))) {
+    throw new Error(
+      `${label} URL must be ${BLOCK_URL_FORMATS[kind]}, got: ${input}`
+    );
+  }
+  return {
+    origin: u.origin,
+    projectName: m[2] as string,
+    requestUrl: `${u.origin}${u.pathname}`
+  };
+};
+
 export const parsePageUrl = (input: string): PageUrl => {
   const u = new URL(input);
   const m = u.pathname.match(/^\/([^/]+)\/(.+?)\/?$/);
