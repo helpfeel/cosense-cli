@@ -28,10 +28,11 @@ Cosenseは複数のページ同士をリンクさせ、複雑な情報をナレ�
 
 ページの読み方: [read-page.md](read-page.md)
 
-- プロジェクト名だけ指定された時は、`https://scrapbox.io/<project>` を projectUrl としてCLIに渡す
-- プロジェクト名+ページタイトルが指定された時は、`https://scrapbox.io/<project>/<title>` を pageUrl としてCLIに渡す
+- プロンプトで渡されたURLは、hostを変えずにCLIに渡す
 - プロンプト中にURLが書かれている時、URLは `https://` から最初の空白文字までが丸ごと一つ。Cosenseのタイトルは長い日本語の文章になりうる（タイトル中の空白はURL上では `_`）ので、日本語・記号・`_`・`で`/`を`に見える助詞も、空白が来るまで全部URLの一部。ASCII→日本語の境目で切ると、ユーザーが意図したのと別のページを読みに行ってしまう
 - 記号を含むURLは shell でクォート（`'...'`）で囲んで渡す
+- プロジェクト名だけ指定された時は、`https://scrapbox.io/<project>` を projectUrl としてCLIに渡す
+- プロジェクト名+ページタイトルだけが指定された時は、`https://scrapbox.io/<project>/<title>` を pageUrl としてCLIに渡す
 
 ### 読んでいたページが見つからなくなった時、共同編集者の変更を追いたい時
 
