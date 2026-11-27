@@ -106,7 +106,7 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 - `listPages`: プロジェクト全体から最近更新・被リンク数・タイトル順などで入口ページを探したい時
 - `readProjectMembers`: 人名・アイコン・編集者の同定が回答に必要な時だけ使う
 
-各要素の `relation` に注目する。参照方向は深掘り優先順位の判断材料になる。
+`list1hopLinks` と `search1hopLinks` の各要素の `relation` に注目する。参照方向は深掘り優先順位の判断材料になる。
 
 #### 必要なものを深掘りする
 
@@ -136,7 +136,7 @@ CLI コマンド一覧は [SKILL.md](SKILL.md) を参照する。
 
 ## 変更を追う
 
-共同編集中は、控えておいた pageId と commitId を `browsePageChanges` に渡すと、最後に読んだ後に共同編集者が何を変えたかを辿れる。pageId（ページの不変ID）と commitId（閲覧時点の最新コミット）は、`browsePage` 出力ではこの名前で、`readPage` の JSON では top-level の `id` / `commitId` として得られる。
+共同編集中は、控えておいた pageId と commitId を `browsePageChanges` に渡すと、最後に読んだ後に共同編集者が何を変えたかを辿れる。pageId と commitId は、`browsePage` 出力ではこの名前で、`readPage` の JSON では top-level の `id` / `commitId` として得られる。
 
 ### ページを見失ったら、リネームを疑う
 
