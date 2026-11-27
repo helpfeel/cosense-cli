@@ -16,6 +16,7 @@ Usage:
 
 オプション:
   --or  複数語のいずれかにマッチするページを返す（既定はAND）
+  --    これより後ろを全て位置引数として読む。-- で始まる <query> を渡す時にその前に置き、オプションはこれより前に置く
 
 例:
   cosense search1hopLinks https://scrapbox.io/shokai/カレー "うどん ラーメン" --or
@@ -34,11 +35,17 @@ const parseArgs = (
   const usage = 'Usage: cosense search1hopLinks <pageUrl> <query> [--or]';
   let or = false;
   const positional: string[] = [];
-  for (const arg of args) {
+  for (const [i, arg] of args.entries()) {
+    if (arg === '--') {
+      positional.push(...args.slice(i + 1));
+      break;
+    }
     if (arg === '--or') {
       or = true;
     } else if (arg.startsWith('--')) {
-      throw new Error(`Unknown option: ${arg}\n${usage}`);
+      throw new Error(
+        `Unknown option: ${arg}\nIf <query> starts with --, put -- before <query> and place all options before --.\n${usage}`
+      );
     } else {
       positional.push(arg);
     }

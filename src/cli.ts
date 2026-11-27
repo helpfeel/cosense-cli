@@ -134,6 +134,8 @@ interface CommandSpec {
   handler: (args: string[]) => Promise<void>;
   summary: string;
   help: string;
+  // handlerが、引数の -- より後ろを位置引数として読むコマンド
+  acceptsSeparator?: boolean;
 }
 
 const packageJsonPath = join(
@@ -237,17 +239,20 @@ const commands: Record<string, CommandSpec> = {
   searchFullText: {
     handler: searchFullText,
     summary: searchFullTextSummary,
-    help: searchFullTextHelp
+    help: searchFullTextHelp,
+    acceptsSeparator: true
   },
   search1hopLinks: {
     handler: search1hopLinks,
     summary: search1hopLinksSummary,
-    help: search1hopLinksHelp
+    help: search1hopLinksHelp,
+    acceptsSeparator: true
   },
   search2hopLinks: {
     handler: search2hopLinks,
     summary: search2hopLinksSummary,
-    help: search2hopLinksHelp
+    help: search2hopLinksHelp,
+    acceptsSeparator: true
   },
   previewEdit: {
     handler: previewEdit,
@@ -313,7 +318,10 @@ if (!spec) {
   process.exit(2);
 }
 
-if (rest.includes('--help')) {
+// acceptsSeparatorのコマンドでは、-- より後ろの --help はhandlerに渡す引数である
+const separatorIndex = spec.acceptsSeparator ? rest.indexOf('--') : -1;
+const helpArgs = separatorIndex === -1 ? rest : rest.slice(0, separatorIndex);
+if (helpArgs.includes('--help')) {
   process.stdout.write(`${spec.help}\n`);
   process.exit(0);
 }

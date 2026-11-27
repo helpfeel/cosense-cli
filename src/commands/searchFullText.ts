@@ -18,9 +18,11 @@ Usage:
 オプション:
   --or                       複数語のいずれかにマッチするページを返す（既定はAND）
   --sort <pageRank|updated>  並び順（既定はpageRank）
+  --                         これより後ろを全て位置引数として読む。-- で始まる <query> を渡す時にその前に置き、オプションはこれより前に置く
 
 例:
   cosense searchFullText https://scrapbox.io/shokai/ "デザイン 設計 design UI UX プロトタイプ" --or
+  cosense searchFullText https://scrapbox.io/shokai/ --or -- "--force --no-verify"
 
 戻り値（top-levelの主なkey）:
   projectName            string         プロジェクト名
@@ -85,6 +87,10 @@ const parseArgs = (args: string[]): ParsedArgs => {
   const positional: string[] = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i] as string;
+    if (arg === '--') {
+      positional.push(...args.slice(i + 1));
+      break;
+    }
     if (arg === '--or') {
       or = true;
     } else if (arg === '--sort') {
@@ -98,7 +104,9 @@ const parseArgs = (args: string[]): ParsedArgs => {
       sort = value;
       i += 1;
     } else if (arg.startsWith('--')) {
-      throw new Error(`Unknown option: ${arg}\n${usage}`);
+      throw new Error(
+        `Unknown option: ${arg}\nIf <query> starts with --, put -- before <query> and place all options before --.\n${usage}`
+      );
     } else {
       positional.push(arg);
     }
