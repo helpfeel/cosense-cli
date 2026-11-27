@@ -16,12 +16,12 @@ Usage:
 戻り値（top-levelの主なkey）:
   links2hop          Array<Link>  2-hop近傍のページ配列
   hiddenHeadwordsLc  string[]     非表示のヘッドワード
-  pagination         object       ページネーション情報
+  pagination         object       { perPage, total, hasNext, nextId }
 
 各 Link の field:
   id, title, titleLc, image, descriptions, linksLc, linked, pageRank,
   infoboxDefinition, infoboxDisableLinks,
-  created, updated, accessed, lastAccessed (string), charsCount,
+  created, updated, accessed, lastAccessed? (string | null), charsCount,
   user (作成者 User), lastUpdateUser (最終更新者 User | null), users (更新者リスト Array<User>)
 
 User の field（user / lastUpdateUser / users[] で共通）:

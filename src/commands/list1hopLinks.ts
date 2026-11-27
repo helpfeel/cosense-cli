@@ -15,16 +15,16 @@ Usage:
 
 戻り値（top-levelの主なkey）:
   links1hop            Array<Link>  1-hop近傍のページ配列
-  charsCount           number       対象ページの文字数
+  charsCount           number       links1hop のページの文字数の合計
   hasBackLinksOrIcons  boolean      被リンク・アイコン参照があるか
   kcsControlTagsLc     string[]     制御タグ
-  pagination           object       ページネーション情報
+  pagination           object       { perPage, total, hasNext, nextId }
 
 各 Link の field:
-  id, title, titleLc, image, descriptions(冒頭数行),
+  id, title, titleLc, image, descriptions?(冒頭数行),
   linksLc(リンク記法のtitleLc配列), linked(被リンク数), pageRank,
   infoboxDefinition, infoboxDisableLinks,
-  created, updated, accessed, lastAccessed (string), charsCount,
+  created, updated, accessed, lastAccessed? (string | null), charsCount,
   user (作成者 User), lastUpdateUser (最終更新者 User | null), users (更新者リスト Array<User>),
   relation 'outgoing' | 'incoming' | 'bidirectional'
     outgoing      対象ページが参照しているページ（正リンク）

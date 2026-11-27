@@ -24,7 +24,7 @@ Project の field:
   loginStrategies Array<string>                認証方法（google / microsoft / saml / email 等）
   plan            string?                      課金plan名
   additionalPlans { [planName]: boolean }      追加plan
-  alert           object?                      project内に表示される通知
+  alert           string?                      project内に表示される通知
   usersCount      number                       メンバー数
   isMember        boolean                      自分がメンバーか
   billingId       string?                      billing ID

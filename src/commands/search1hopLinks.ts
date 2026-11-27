@@ -22,11 +22,12 @@ Usage:
   cosense search1hopLinks https://scrapbox.io/shokai/カレー "うどん ラーメン" --or
 
 戻り値（top-levelの主なkey）:
-  links1hop  Array<Link>  query を本文に含む1-hop近傍ページ
-  ほか list1hopLinks と同じ top-level key
+  links1hop  Array<Link>  query にマッチした1-hop近傍ページ
+  ほか list1hopLinks と同じ top-level key。charsCount と pagination は、絞り込む前の値
 
-各 Link の field（list1hopLinksに加えて）:
-  search  検索ハイライト情報
+各 Link の field（list1hopLinksとの違い）:
+  descriptions?  マッチした箇所がある時は、冒頭数行ではなく、その抜粋
+  search?        { words, excludes }。query から読み取った、検索の語と除外の語
 `;
 
 const parseArgs = (

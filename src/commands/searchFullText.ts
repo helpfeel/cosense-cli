@@ -27,8 +27,8 @@ Usage:
 戻り値（top-levelの主なkey）:
   projectName            string         プロジェクト名
   searchQuery            string         実行されたクエリ
-  count                  number         ヒット総数
-  limit                  number         1リクエストで返る上限
+  count                  number         pages の件数。ヒットの総数ではない
+  limit                  number         検索する件数の上限
   pages                  Array<Page>    マッチしたページの配列
   existsExactTitleMatch  boolean        タイトル完全一致がある場合 true
 
@@ -45,8 +45,8 @@ Usage:
   pageRank        number         PageRank
   linesCount      number         行数
   charsCount      number         文字数
-  words           string[]       マッチした語の一覧
-  lines           string[]       マッチした本文の行
+  words           string[]       query から読み取った検索の語
+  lines           string[]       マッチした箇所の抜粋。タイトルの行や、本文の要約になる事がある
 
 User の field（user / lastUpdateUser / users[] で共通）:
   id           string   Cosense内部のID

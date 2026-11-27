@@ -15,12 +15,12 @@ Usage:
 
 戻り値（top-levelの主なkey）:
   id                  string                 Cosense内部のID
-  name                string                 ログイン名
+  name                string?                ログイン名
   displayName         string                 表示名
-  email               string                 メールアドレス
+  email               string?                メールアドレス
   photo               string                 アイコン画像URL
   provider            string                 認証プロバイダ（google / microsoft / saml 等）
-  pageFilters         Array<{type, value}>   page list filter設定
+  pageFilters         Array<{type, value?}>  page list filter設定
   created             string                 作成時刻
   updated             string                 更新時刻
 `;

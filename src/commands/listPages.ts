@@ -43,7 +43,7 @@ Usage:
   user (作成者 User), lastUpdateUser (最終更新者 User | null), users (更新者リスト Array<User>),
   pin (pinned page なら正の値), views, linked,
   linesCount, charsCount,
-  created, updated, accessed, lastAccessed (string)
+  created, updated, accessed, lastAccessed? (string | null)
 
 User の field（user / lastUpdateUser / users[] で共通）:
   id           string   Cosense内部のID
